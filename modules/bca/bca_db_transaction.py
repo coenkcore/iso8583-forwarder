@@ -8,10 +8,11 @@ sys.path[0:0] = ['/usr/share/opensipkd/modules']
 from tools import FixLength
 from base_models import DBSession
 sys.path[0:0] = ['/etc/opensipkd']
-from pbb_conf import (
-    host,
-    is_update_sppt,
-    )
+# from pbb_conf import (
+    # host,
+    # is_update_sppt,
+    # )
+from bca_conf import host    
 from bca_transaction import Transaction
 from bca_structure import (
     RC_INVALID_NUMBER,
@@ -33,17 +34,13 @@ from bca_structure import (
     )
 sys.path[0:0] = ['/usr/share/opensipkd-forwarder/modules/bca/pbb']
 from pbb_db_transaction import PbbDbTransaction
-#from pbb_models import (
+from pbb_reversal import PbbReversal
+
+from log_models import (
 #    INQUIRY_SEQ,
-#    Payment,
-#    Reversal,
-#    )
-
-
-class MyFixLength(FixLength):
-    def get(self, name):
-        return self.fields[name]['value'] or None
-
+    Payment,
+    Reversal,
+    )
 
 def inquiry_id():
     return INQUIRY_SEQ.execute(DBSession.bind)
@@ -104,7 +101,8 @@ class BcaDbTransaction(Transaction):
         self.setBit(62, v) 
 
     def _inquiry_response(self):
-        self.invoice_id_raw = self.from_iso.get_value(61).strip()
+        self.init_id()
+        
         if self.is_pbb():
             inv = PbbDbTransaction(invoice_id=self.invoice_id_raw, conf=self.conf,
                    channel=self.get_channel())
@@ -168,14 +166,19 @@ class BcaDbTransaction(Transaction):
         inq.jatuh_tempo = inv.tgl_jatuh_tempo_sppt
         inq.bulan_tunggakan = self.calc.bln_tunggakan
         return inq
-
+    #########
+    #PAYMENT#
+    #########
     def _payment_response(self):
+        self.init_id()
+        self.init_id_pay()
         bank_name = self.conf['name']
         self.conf.update(host[bank_name])
         
         # self.copy([4, 48, 62]) # belum di-copy oleh set_transaction_response()
-        #self.setBit(47, '') # default payment ID
-        self.invoice_id_raw = self.from_iso.get_value(61).strip()
+        
+        self.setBit(47, '') # default payment ID
+        
         if self.is_pbb():
             inv = PbbDbTransaction(invoice_id=self.invoice_id_raw, conf=self.conf,
                    channel=self.get_channel())
@@ -188,55 +191,40 @@ class BcaDbTransaction(Transaction):
             
         if self.calc.total <= 0:
             return self.ack_already_paid_2()
-        ##todo: dibypass dulu lognya belum ada
-        # inq = self.invoice2inquiry()
-        # if not inq:
-            # return self.ack_inquiry_not_found()
-        inq = None    
-        total_bayar = int(self.from_iso.get_value(4))
+            
         total_tagihan = self.calc.total
-        if total_bayar != total_tagihan:
+        if self.total_bayar != total_tagihan:
             return self.ack_insufficient_fund(total_bayar, total_tagihan)
             
-        bayar = inv.create_payment(total_bayar, self.from_iso.get_transaction_date())
-        #todo
-        #payment = log_payment(total_bayar, self.from_iso.get_transaction_date()) 
+        bayar, urutan_ke = inv.create_payment(self.total_bayar, self.tgl_bayar)
+        payment = self.log_payment(urutan_ke) 
         
-        #if not payment:
-        #    return self.ack_create_payment_failed()
+        if not payment:
+            return self.ack_create_payment_failed()
+        DBSession.add(payment)
         # is_update_sppt and self.calc.set_paid()
         # DBSession.add(inv)
         # DBSession.add(bayar)
-        # DBSession.add(payment)
-        # self.setBit(47, str(payment.id))
-        #self.commit()
         inv.commit()
+        self.setBit(47, str(payment.id))
+        self.commit()
 
-    def log_payment():
-        # tp = ''
-        # d = bayar.to_dict()
-        # for fieldname in self.get_field_bank_non_tp():
-            # tp += d[fieldname] or '00'
-        #payment_id = create_payment_id(tp)
-        # if not payment_id:
-            # return None, None
-        # payment = Payment(id=payment_id)
-        # payment.inquiry_id = inq.id
-        # payment.propinsi = inq.propinsi
-        # payment.kabupaten = inq.kabupaten
-        # payment.kecamatan = inq.kecamatan
-        # payment.kelurahan = inq.kelurahan
-        # payment.blok = inq.blok
-        # payment.urut = inq.urut
-        # payment.jenis = inq.jenis
-        # payment.tahun = inq.tahun
-        # payment.ke = urutan_bayar 
-        # for fieldname in self.get_field_bank():
-            # value = d[fieldname] or '00'
-            # payment.from_dict({fieldname: value})
-        # payment.channel = self.channel
-        # payment.ntb = self.from_iso.get_value(48) # Nomor Transaksi Bank
-        # payment.iso_request = ISO8583.getRawIso(self.from_iso).upper()
+    def log_payment(self, urutan_ke):
+        tp = "".join([self.tgl_bayar.strftime('%Y'),self.bank_id])
+        payment_id = create_payment_id(tp)
+        if not payment_id:
+            return None
+        payment = Payment(id=payment_id)
+        payment.invoice_id   = self.invoice_id_raw
+        payment.bank_id      = self.bank_id
+        payment.forwarder_id = self.forwarder_id
+        payment.amount       = self.total_bayar
+        payment.transaction_date = self.tgl_bayar
+        payment.ntp          = payment_id
+        payment.ntb          = self.ntb
+        payment.ke           = urutan_ke
+        payment.channel      = self.get_channel()
+        payment.status       = 1
         return payment
         
     def payment_response(self):
@@ -273,46 +261,80 @@ class BcaDbTransaction(Transaction):
 
     # def get_field_bank_non_tp(self): # override
         # return
-
+    def init_id(self):
+        self.invoice_id_raw = self.from_iso.get_value(61).strip()
+        self.bank_id       = self.from_iso.get_value(32).strip()
+        self.forwarder_id  = self.from_iso.get_value(33).strip()
+        return 
+        
+    def init_id_pay(self):
+        self.total_bayar   = int(self.from_iso.get_value(4))
+        self.tgl_bayar     = self.from_iso.get_transaction_date()
+        self.ntb           = self.from_iso.get_value(37).strip()
+            
     ############
     # Reversal #
     ############
-    # def _reversal_response(self):
-        # reversal_iso_request = ISO8583.getRawIso(self.from_iso).upper()
-        # pay_iso_request = '0200' + reversal_iso_request[4:]
-        # q = DBSession.query(Payment).filter_by(iso_request=pay_iso_request)
-        # pay = q.first()
-        # if not pay:
-            # return self.ack_payment_not_found()
-        # invoice_id = pay2invoice_id(pay)
-        # cls = self.get_reversal_cls()
-        # rev = cls(pay) 
-        # if not rev.bayar:
-            # return self.ack_payment_not_found_2(invoice_id, pay.ke)
-        # if not rev.invoice:
-            # return self.ack_not_available_2(invoice_id)
-        # if not rev.is_paid():
-            # return self.ack_invoice_open(invoice_id)
-        # rev.set_unpaid()
-        # reversal = Reversal(payment_id=pay.id) # Catatan tambahan
-        # reversal.iso_request = reversal_iso_request
-        # DBSession.add(rev.bayar)
-        # DBSession.add(rev.invoice)
-        # DBSession.add(reversal)
-        # self.commit()
-        #self.settlement.set_raw(self.from_iso.get_value(13))
-        # return
-    # def reversal_response(self):
-        # try:
-            # self._reversal_response()
+    def _reversal_response(self):
+        self.init_id()
+        self.init_id_pay()
+
+        q = DBSession.query(Payment).filter_by(
+               invoice_id = self.invoice_id_raw,
+               bank_id=self.bank_id,
+               forwarder_id = self.forwarder_id,
+               ntb = self.ntb
+               #status = 1
+               )
+               
+        pay = q.first()
+        if not pay:
+            return self.ack_payment_not_found()
+
+        if pay.status==0:
+            self.setBit('39','00')
+            return 
+        
+        #invoice_no = 
+        reversal_iso_request = ISO8583.getRawIso(self.from_iso).upper()
+        #pay_iso_request = '0200' + reversal_iso_request[4:]
+        #invoice_id = pay2invoice_id(pay)
+        
+        if self.is_pbb():
+            rev = PbbReversal(pay) 
+            if not rev.bayar:
+                return self.ack_payment_not_found_2(self.invoice_id_raw, pay.ke)
+            if not rev.invoice:
+                return self.ack_not_available_2(self.invoice_id_raw)
+            if not rev.is_paid():
+                return self.ack_invoice_open(self.invoice_id_raw)
+            rev.set_unpaid()
+            
+        else:
+            return self.ack_other('other error')
+
+        reversal = Reversal(payment_id=pay.id) # Catatan tambahan
+        reversal.iso_request = reversal_iso_request
+        pay.status = 0
+        DBSession.add(reversal)
+        DBSession.add(pay)
+        rev.commit()
+        self.commit()
+        
+        #DBSession.add(rev.bayar)
+        #DBSession.add(rev.invoice)
+        self.settlement.set_raw(self.from_iso.get_value(13))
+        return
+        
+    def reversal_response(self):
+        #try:
+        self._reversal_response()
         # except:
             # f = StringIO()
             # traceback.print_exc(file=f)
             # self.log_error(f.getvalue())
             # f.close()
             # self.ack_other('other error')
-        # return
-    # def get_reversal_cls(self): # override
         # return
 
     ##################
@@ -331,7 +353,7 @@ class BcaDbTransaction(Transaction):
         self.ack(RC_NOT_AVAILABLE, msg)
 
     def ack_already_paid(self):
-        p = self.invoice2payment()
+        p = self.invoice2payment(self.calc.invoice)
         self.setBit(47, p and str(p.id) or '')
         msg = ERR_ALREADY_PAID.format(invoice_id=self.invoice_id_raw)
         self.ack(RC_ALREADY_PAID, msg)
@@ -375,26 +397,20 @@ class BcaDbTransaction(Transaction):
         DBSession.flush()
         DBSession.commit()
         self.ack()
-# def invoice2inquiry(sppt):
-#    q = DBSession.query(Inquiry).filter_by(
-            # propinsi=sppt.kd_propinsi,
-            # kabupaten=sppt.kd_dati2,
-            # kecamatan=sppt.kd_kecamatan,
-            # kelurahan=sppt.kd_kelurahan,
-            # blok=sppt.kd_blok,
-            # urut=sppt.no_urut,
-            # jenis=sppt.kd_jns_op,
-            # tahun=sppt.thn_pajak_sppt)
-    # return q.order_by('id DESC').first()
+        
+    # def invoice2inquiry(sppt):
+       # q = DBSession.query(Inquiry).filter_by(
+                # propinsi=sppt.kd_propinsi,
+                # kabupaten=sppt.kd_dati2,
+                # kecamatan=sppt.kd_kecamatan,
+                # kelurahan=sppt.kd_kelurahan,
+                # blok=sppt.kd_blok,
+                # urut=sppt.no_urut,
+                # jenis=sppt.kd_jns_op,
+                # tahun=sppt.thn_pajak_sppt)
+        # return q.order_by('id DESC').first()
 
-# def invoice2payment(sppt):
-    # q = PbbDbSession.query(Payment).filter_by(
-            # propinsi=sppt.kd_propinsi,
-            # kabupaten=sppt.kd_dati2,
-            # kecamatan=sppt.kd_kecamatan,
-            # kelurahan=sppt.kd_kelurahan,
-            # blok=sppt.kd_blok,
-            # urut=sppt.no_urut,
-            # jenis=sppt.kd_jns_op,
-            # tahun=sppt.thn_pajak_sppt)
-    # return q.order_by('ke DESC').first()
+    def invoice2payment(self, sppt):
+        q = DBSession.query(Payment).filter_by(
+                invoice_id=self.invoice_id_raw)
+        return q.order_by('ke DESC').first()

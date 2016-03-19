@@ -1,6 +1,6 @@
 import sys
 sys.path[0:0] = ['/etc/opensipkd']
-from bca_conf import module_names, db_url
+#from bca_conf import module_names, db_url
 
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
@@ -19,7 +19,7 @@ from bca_conf import (
     db_pool_size,
     db_max_overflow,
     )
-    
+ print    db_url
 engine = create_engine(db_url, pool_size=db_pool_size,
             max_overflow=db_max_overflow)
 Base.metadata.bind = engine

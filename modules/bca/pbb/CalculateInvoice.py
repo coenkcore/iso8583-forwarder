@@ -1,6 +1,6 @@
 import sys
-sys.path[0:0] = ['/usr/share/opensipkd/modules']
-from base_models import DBSession
+sys.path[0:0] = ['/usr/share/opensipkd/modules/bca/']
+from pbb import PbbDbSession
 from datetime import (
     datetime,
     date,
@@ -16,7 +16,7 @@ from pbb_conf import persen_denda
 
 def query_sppt(propinsi, kabupaten, kecamatan, kelurahan, blok, urut,
         jenis, tahun):
-    return DBSession.query(Invoice).filter_by(
+    return PbbDbSession.query(Invoice).filter_by(
                 kd_propinsi=propinsi,
                 kd_dati2=kabupaten,
                 kd_kecamatan=kecamatan,
@@ -51,7 +51,7 @@ class CalculateInvoice(Common):
             self.paid = self.is_paid()
 
     def hitung(self):
-        bayar = DBSession.query(
+        bayar = PbbDbSession.query(
                     func.sum(Pembayaran.jml_sppt_yg_dibayar).\
                          label('jml_sppt_yg_dibayar'),
                     func.sum(Pembayaran.denda_sppt).\

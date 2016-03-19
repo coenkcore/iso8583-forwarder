@@ -6,7 +6,7 @@ from common import Test
 sys.path[0:0] = ['/usr/share/opensipkd-forwarder/modules/bca']
 from bca_structure import INQUIRY_CODE
 sys.path[0:0] = ['/etc/opensipkd']
-from pbb_conf import (
+from bca_conf import (
     #module_name,
     db_url,
     )

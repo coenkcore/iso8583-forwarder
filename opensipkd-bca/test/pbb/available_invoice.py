@@ -6,7 +6,7 @@ from log_models import Payment
 sys.path[0:0] = ['/usr/share/opensipkd-forwarder/modules/bca/pbb']
 from models import Invoice
 from CalculateInvoice import CalculateInvoice
-from DbTransaction import sppt2nop
+from pbb_db_transaction import sppt2nop
 
 
 class AvailableInvoice(object):

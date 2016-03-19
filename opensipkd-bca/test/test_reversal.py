@@ -1,9 +1,9 @@
 from test_payment import (
     Payment,
     PaymentTest,
-    DbTransaction,
+    BcaDbTransaction,
     )
-from pbb_structure import RC_OK
+from bca_structure import RC_OK
 
 
 
@@ -20,13 +20,14 @@ class ReversalTest(PaymentTest):
             return
         print('Bank kirim reversal request')
         req_iso = Reversal()
+        #pay_req_iso = '0400F23A4401A8E1803E00000000042000001420160319200731541019000000000237031920073120073120073103190319601002103110050011000000000200731000000000000000000000000000000000000000000000000000000NAMA BANK01420160319200731390003PAY00314202232777110020060219020062653277711002006021902006IKIN TINI                          KP GOBANG                          SINGKUP                            PURBARATU                          JAWA BARAT                         0000000002200000000000353108200700000000016000000000007700000000023700000000'
         req_iso.reversal_request(pay_req_iso)
         raw = self.get_raw(req_iso)
         print('Pemda terima reversal request')
-        from_iso = DbTransaction()
+        from_iso = BcaDbTransaction()
         from_iso.setIsoContent(raw)
         print('Pemda kirim reversal response')
-        resp_iso = DbTransaction(from_iso=from_iso, conf=self.conf)
+        resp_iso = BcaDbTransaction(from_iso=from_iso, conf=self.conf)
         func = getattr(resp_iso, from_iso.get_func_name())
         func()
         self.get_raw(resp_iso)
