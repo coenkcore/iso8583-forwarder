@@ -1,0 +1,39 @@
+module_name = 'cikarang'
+
+#db_url = 'postgresql://pbb:FIXME@localhost/pbb'
+db_url = ''
+
+# Tuning
+# http://docs.sqlalchemy.org/en/rel_0_9/core/pooling.html
+db_pool_size = 50
+db_max_overflow = 100
+
+# Denda bila lewat jatuh tempo
+persen_denda = 2.0
+
+nip_rekam_byr_sppt = '999999999'
+
+# Apakah perlu update tabel sppt ? Karena bisa jadi sudah dilakukan oleh
+# trigger di tabel pembayaran_sppt.
+is_update_sppt = True
+
+host = {
+    'bjb': {
+        'kd_kanwil': '01',
+        'kd_kantor': '01',
+        'kd_tp': '08',
+        },
+    'bri': {
+        'kd_kanwil': '22',
+        'kd_kantor': '11',
+        'kd_tp': {
+            '6010': '16',
+            '6011': '15',
+            'default': '16'},
+        },
+    'bca': {
+        'kd_kanwil': '01',
+        'kd_kantor': '01',
+        'kd_tp': '00',
+        },
+    }

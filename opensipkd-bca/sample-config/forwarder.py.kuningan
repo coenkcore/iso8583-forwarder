@@ -1,0 +1,19 @@
+iso8583_listen_address = ('0.0.0.0', 8583) # Production
+#iso8583_listen_address = ('0.0.0.0', 8593) # Devel
+
+# Nama modul sesuai file atau direktori yang berada di
+# /usr/share/opensipkd-forwarder/modules.
+module_name = 'pbb'
+
+host = {
+    'bjb_with_suffix': {
+        'ip': '10.31.224.200',
+        #'ip': '10.31.224.130', # devel
+        'port': 10002,
+    },
+    'pos': {
+        'ip': '192.168.15.2',
+        'timeout': 200,
+        'need echo': False,
+        },
+    }
