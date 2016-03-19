@@ -2,9 +2,9 @@ from datetime import datetime
 from test_inquiry import (
     Inquiry,
     InquiryTest,
-    DbTransaction,
+    BcaDbTransaction,
     )
-from pbb_structure import (
+from bca_structure import (
     PAYMENT_CODE,
     RC_OK,
     )
@@ -13,7 +13,7 @@ from pbb_structure import (
 class Payment(Inquiry):
     def payment_request(self, invoice_id, inq_resp_iso):
         self.inquiry_request(invoice_id)
-        self.setBit(3, PAYMENT_CODE)
+        self.setBit(3, PAYMENT_CODE[0])
         jml_bayar = inq_resp_iso.getBit(4)
         self.setBit(4, jml_bayar)
         ntb = datetime.now().strftime('%Y%m%d%H%M%S')
@@ -32,10 +32,10 @@ class PaymentTest(InquiryTest):
         req_iso.payment_request(self.invoice_id, resp_iso)
         raw = self.get_raw(req_iso)
         print('Pemda terima payment request')
-        from_iso = DbTransaction()
+        from_iso = BcaDbTransaction()
         from_iso.setIsoContent(raw)
         print('Pemda kirim payment response')
-        resp_iso = DbTransaction(from_iso=from_iso, conf=self.conf)
+        resp_iso = BcaDbTransaction(from_iso=from_iso, conf=self.conf)
         func = getattr(resp_iso, from_iso.get_func_name())
         func()
         self.get_raw(resp_iso)

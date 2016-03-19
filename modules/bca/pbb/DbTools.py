@@ -1,10 +1,10 @@
 import sys
-sys.path[0:0] = ['/usr/share/opensipkd-forwarder/modules']
-from pbb import PbbDBSession
+sys.path[0:0] = ['/usr/share/opensipkd-forwarder/modules/bca/']
+from pbb import PbbDbSession
 from pbb.models import Pembayaran
 
 def query_pembayaran(propinsi, kabupaten, kecamatan, kelurahan, blok, urut, jenis, tahun):
-    return PbbDBSession.query(Pembayaran).filter_by(
+    return PbbDbSession.query(Pembayaran).filter_by(
                 kd_propinsi=propinsi,
                 kd_dati2=kabupaten,
                 kd_kecamatan=kecamatan,

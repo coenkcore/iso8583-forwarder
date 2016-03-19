@@ -34,7 +34,6 @@
     # query_sppt,
     # )
 # from PaymentReversal import PaymentReversal
-# from DbTools import query_pembayaran
 
 # def cari_kelurahan(propinsi, kabupaten, kecamatan, kelurahan):
     # q = PbbDbSession.query(Kelurahan).filter_by(

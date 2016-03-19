@@ -72,7 +72,7 @@ class Transaction(Network):
         if not self.is_transaction():
             return
         code = self.get_transaction_code()
-        return code == PAYMENT_CODE and 'payment_response'
+        return code in PAYMENT_CODE and 'payment_response'
 
     def set_transaction_response(self):
         self.setMTI('0210')
