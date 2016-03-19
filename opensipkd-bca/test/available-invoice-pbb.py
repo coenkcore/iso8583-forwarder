@@ -9,12 +9,11 @@ from base_models import (
 sys.path[0:0] = ['/etc/opensipkd']
 from pbb_conf import (
     db_url, 
-    module_name,
     )
 engine = create_engine(db_url)
 Base.metadata.bind = engine
 DBSession.configure(bind=engine)
-sys.path[0:0] = ['/usr/share/doc/opensipkd-pbb/test/' + module_name]
+sys.path[0:0] = ['/usr/share/doc/opensipkd-bca/test/pbb']
 from available_invoice import AvailableInvoice
 
 

@@ -10,7 +10,7 @@ from pbb_conf import (
     )
 
 
-engine = create_engine(db_url, pool_size=db_pool_size,
+engine_bphtb = create_engine(db_url, pool_size=db_pool_size,
             max_overflow=db_max_overflow)
-Base.metadata.bind = engine
+BphtbBase.metadata.bind = engine
 from DbTransaction import DbTransaction

@@ -3,11 +3,11 @@ from ISO8583Server import (
     DateVar,
     DateTimeVar,
     )
-from pbb_network import Network
-from pbb_structure import (
-    TRANSACTION_BITS,
+from bca_network import Network
+from bca_structure import (
     INQUIRY_CODE,
     PAYMENT_CODE,
+    TRANSACTION_BITS,
     ERR_SETTLEMENT_DATE,
     ERR_TRANSACTION_DATETIME,
     ERR_TRANSACTION_DATE,
@@ -66,7 +66,7 @@ class Transaction(Network):
         if not self.is_transaction():
             return
         code = self.get_transaction_code()
-        return code == INQUIRY_CODE and 'inquiry_response'
+        return code in INQUIRY_CODE and 'inquiry_response'
 
     def is_payment(self):
         if not self.is_transaction():
@@ -77,9 +77,10 @@ class Transaction(Network):
     def set_transaction_response(self):
         self.setMTI('0210')
         # Sesuai kolom yang berisi E (Equal) pada PDF
-        self.copy([2, 3, 7, 11, 12, 13, 15, 18, 22, 32, 33, 35, 37, 41, 42, 43, 49, 59,
-                   60, 61, 63, 102, 107])
-
+        self.copy()
+        #[2, 3, 7, 11, 12, 13, 15, 18, 22, 32, 33, 35, 37, 41, 42, 43, 49, 59,
+        #           60, 61, 63, 102, 107]
+        
     def get_settlement(self):
         raw = self.get_value(15)
         self.settlement.set_raw(raw)

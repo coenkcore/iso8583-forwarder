@@ -1,33 +1,37 @@
 import sys
 sys.path.insert(0, '/usr/share/opensipkd/modules')
 from base_models import (
-    Base,
     CommonModel,
     )
+sys.path.insert(0, '/usr/share/opensipkd-forwarder/modules')
+from pbb import (
+    PbbBase,
+    )
+    
 sys.path.insert(0, '/etc/opensipkd')
 from pbb_conf import db_schema
 
 
-class Invoice(Base, CommonModel):
+class Invoice(PbbBase, CommonModel):
     __tablename__ = 'sppt'
     __table_args__ = dict(schema=db_schema, autoload=True)
 
-class Pembayaran(Base, CommonModel):
+class Pembayaran(PbbBase, CommonModel):
     __tablename__ = 'pembayaran_sppt'
     __table_args__ = dict(schema=db_schema, autoload=True)
 
-class Kelurahan(Base, CommonModel):
+class Kelurahan(PbbBase, CommonModel):
     __tablename__ = 'ref_kelurahan'
     __table_args__ = dict(schema=db_schema, autoload=True)
 
-class Kecamatan(Base, CommonModel):
+class Kecamatan(PbbBase, CommonModel):
     __tablename__ = 'ref_kecamatan'
     __table_args__ = dict(schema=db_schema, autoload=True)
 
-class Kabupaten(Base, CommonModel):
+class Kabupaten(PbbBase, CommonModel):
     __tablename__ = 'ref_dati2'
     __table_args__ = dict(schema=db_schema, autoload=True)
 
-class Propinsi(Base, CommonModel):
+class Propinsi(PbbBase, CommonModel):
     __tablename__ = 'ref_propinsi'
     __table_args__ = dict(schema=db_schema, autoload=True)

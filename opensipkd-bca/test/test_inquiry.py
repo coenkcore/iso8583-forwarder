@@ -3,30 +3,30 @@ from sqlalchemy import create_engine
 from datetime import datetime
 from time import sleep
 from common import Test
-sys.path[0:0] = ['/usr/share/opensipkd-forwarder/modules/pbb']
-from pbb_structure import INQUIRY_CODE
+sys.path[0:0] = ['/usr/share/opensipkd-forwarder/modules/bca']
+from bca_structure import INQUIRY_CODE
 sys.path[0:0] = ['/etc/opensipkd']
 from pbb_conf import (
-    module_name,
+    #module_name,
     db_url,
     )
 sys.path[0:0] = ['/usr/share/opensipkd/modules']
 from base_models import Base
 engine = create_engine(db_url)
 Base.metadata.bind = engine
-sys.path[0:0] = ['/usr/share/opensipkd-forwarder/modules/pbb/' + module_name]
-from DbTransaction import DbTransaction
+sys.path[0:0] = ['/usr/share/opensipkd-forwarder/modules/bca/']
+from bca_db_transaction import BcaDbTransaction
 
 
-class Inquiry(DbTransaction):
+class Inquiry(BcaDbTransaction):
     def is_response(self):
-        return DbTransaction.is_response(self) or self.getMTI() == '0210'
+        return BaseDbTransaction.is_response(self) or self.getMTI() == '0210'
 
     def inquiry_request(self, invoice_id):
         self.setMTI('0200')
         kini = datetime.now()
         self.setBit(2, kini.strftime('%Y%m%d%H%M%S')) 
-        self.setBit(3, INQUIRY_CODE)
+        self.setBit(3, '341019')
         self.setBit(7, kini.strftime('%m%d%H%M%S')) 
         self.setBit(11, kini.strftime('%H%M%S')) 
         self.setBit(12, kini.strftime('%H%M%S')) 
@@ -61,10 +61,10 @@ class InquiryTest(Test):
         req_iso.inquiry_request(self.invoice_id)
         raw = self.get_raw(req_iso)
         print('Pemda terima inquiry request')
-        from_iso = DbTransaction()
+        from_iso = BcaDbTransaction()
         from_iso.setIsoContent(raw)
         print('Pemda kirim inquiry response')
-        resp_iso = DbTransaction(from_iso=from_iso, conf=self.conf)
+        resp_iso = BcaDbTransaction(from_iso=from_iso, conf=self.conf)
         func = getattr(resp_iso, from_iso.get_func_name())
         func()
         self.get_raw(resp_iso)

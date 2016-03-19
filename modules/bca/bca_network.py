@@ -4,7 +4,7 @@ from ISO8583Server import (
     Data,
     DateTimeVar,
     )
-from pbb_structure import (
+from bca_structure import (
     NETWORK_BITS,
     RC_OK,
     RC_LINK_DOWN,

@@ -1,7 +1,7 @@
 import sys
 from common import Test
-sys.path[0:0] = ['/usr/share/opensipkd-forwarder/modules/pbb']
-from pbb_network import Network
+sys.path[0:0] = ['/usr/share/opensipkd-forwarder/modules/bca']
+from bca_network import Network
 
 
 class NetworkTest(Test):
