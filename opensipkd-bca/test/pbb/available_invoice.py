@@ -3,7 +3,7 @@ sys.path[0:0] = ['/usr/share/opensipkd/modules']
 from base_models import DBSession
 sys.path[0:0] = ['/usr/share/opensipkd-forwarder/modules/bca']
 from log_models import Payment
-sys.path[0:0] = ['/usr/share/opensipkd-forwarder/modules/pbb']
+sys.path[0:0] = ['/usr/share/opensipkd-forwarder/modules/bca/pbb']
 from models import Invoice
 from CalculateInvoice import CalculateInvoice
 from DbTransaction import sppt2nop

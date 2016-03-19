@@ -36,9 +36,9 @@ from pbb_conf import (
     
 PbbBase = declarative_base()
 session_factory = sessionmaker()
-PbbDBSession = scoped_session(session_factory)
+PbbDbSession = scoped_session(session_factory)
 print db_url
 engine_pbb = create_engine(db_url, pool_size=db_pool_size,
             max_overflow=db_max_overflow)
 PbbBase.metadata.bind = engine_pbb
-from DbTransaction import DbTransaction
+#from DbTransaction import DbTransaction

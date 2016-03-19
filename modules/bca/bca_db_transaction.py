@@ -14,8 +14,6 @@ from pbb_conf import (
     )
 from bca_transaction import Transaction
 from bca_structure import (
-    #INVOICE_ID,
-    #INVOICE_PROFILE,
     RC_INVALID_NUMBER,
     RC_ALREADY_PAID,
     RC_NOT_AVAILABLE,
@@ -33,6 +31,8 @@ from bca_structure import (
     ERR_INVOICE_OPEN,
     ERR_SETTLEMENT_DATE,
     )
+sys.path[0:0] = ['/usr/share/opensipkd-forwarder/modules/bca/pbb']
+from pbb_db_transaction import PbbDbTransaction
 #from pbb_models import (
 #    INQUIRY_SEQ,
 #    Payment,
@@ -74,63 +74,73 @@ def pay2invoice_id(pay):
 # Abstract class
 class BcaDbTransaction(Transaction):
     def __init__(self, *args, **kwargs):
-        #self.invoice_id = MyFixLength(INVOICE_ID)
-        #self.invoice_id_raw = None # Cache
-        #self.invoice_profile = MyFixLength(INVOICE_PROFILE)
         Transaction.__init__(self, *args, **kwargs)
+    def is_pbb(self):
+        code = self.from_iso.get_value(3).strip()
+        return code in ['341019','541019']
+    
+    def is_non_pbb(self):
+        code = self.from_iso.get_value(3).strip()
+        return code in ['300801','500801']
+        
+    def is_bphtb(self):
+        code = self.from_iso.get_value(3).strip()
+        return code in ['341066','541066']
+    
+    def is_padl(self):
+        code = self.from_iso.get_value(3).strip()
+        return code in ['300001','500001']
+        
+    # def get_calc_cls(self): # override
+        # return
 
-    def get_invoice(self):
-        self.invoice_id_raw = self.from_iso.get_value(61).strip()
-        #IF PBB
-        #IF BPHTB
-        #IF OTHER
-        print "INVOICE"
-        print self.invoice_id_raw
-        return
-    def get_calc_cls(self): # override
-        return
-
-    def invoice_id2profile(self):
-        pass
-    def sppt2profile(self): # override
-        pass
+    # def invoice_id2profile(self):
+        # pass
+    # def sppt2profile(self): # override
+        # pass
 
     def set_invoice_profile(self):
-        v = self.invoice_profile.get_raw()
+        v = self.calc.invoice_profile.get_raw()
         self.setBit(62, v) 
 
     def _inquiry_response(self):
-        inv = self.get_invoice()
-        self.setBit(39, '00')
-        
-        if not inv:
-            return
+        self.invoice_id_raw = self.from_iso.get_value(61).strip()
+        if self.is_pbb():
+            pbb = PbbDbTransaction()
+            self.calc = pbb.get_invoice(self.invoice_id_raw)
+        else:
+            return self.ack_other('other error')
+        if not self.calc.invoice:
+            return self.ack_not_available()    
+            
         if self.calc.paid:
             return self.ack_already_paid()
+            
         if self.calc.total <= 0:
             return self.ack_already_paid_2()
+        
         settlement_date = self.from_iso.get_settlement()
         if not settlement_date:
-            return
-        #LOG DATABASE
-        inq = self.create_inquiry()
-        inq.stan = self.from_iso.get_value(11)
-        inq.pengirim = self.from_iso.get_value(33)
-        self.setBit(4, self.calc.total)
-        # self.invoice_profile.from_dict({
-            # 'Jatuh Tempo': inq.jatuh_tempo.strftime('%Y%m%d'),
-            # 'Tagihan': self.calc.tagihan,
-            # 'Denda': self.calc.denda,
-            # 'Total Bayar': self.calc.total})
-        inq.transmission = self.from_iso.get_transmission()
-        inq.settlement = settlement_date
+            return self.ack_other('other error')
         
+        self.setBit(4, self.calc.total)
         self.set_invoice_profile()
-        DBSession.add(inq)
-        self.commit()
+        
+        #self.ack_ok
+          
+        #LOG DATABASE
+        # inq = self.create_inquiry()
+        # inq.stan = self.from_iso.get_value(11)
+        # inq.pengirim = self.from_iso.get_value(33)
+        # inq.transmission = self.from_iso.get_transmission()
+        # inq.settlement = settlement_date
+        
+        # DBSession.add(inq)
+        # self.commit()
         #LOG DATABASE END
         
     def inquiry_response(self):
+        self.setBit(39, '00')
         try:
             self._inquiry_response()
         except:
@@ -141,7 +151,22 @@ class BcaDbTransaction(Transaction):
             self.ack_other('other error')
 
     def create_inquiry(self): # override
-        return
+        inv = self.calc.invoice
+        bumi = int(inv.luas_bumi_sppt)
+        bangunan = int(inv.luas_bng_sppt)
+        njop = inv.njop_bumi_sppt + inv.njop_bng_sppt
+        nop = sppt2nop(inv)
+        inq = Inquiry(nop=nop, propinsi=inv.kd_propinsi, kabupaten=inv.kd_dati2,
+                  kecamatan=inv.kd_kecamatan, kelurahan=inv.kd_kelurahan,
+                  blok=inv.kd_blok, urut=inv.no_urut, jenis=inv.kd_jns_op,
+                  tahun=inv.thn_pajak_sppt, tgl=self.calc.kini)
+        inq.id = inquiry_id()
+        inq.tagihan = self.calc.tagihan
+        inq.denda = self.calc.denda
+        inq.persen_denda = persen_denda
+        inq.jatuh_tempo = inv.tgl_jatuh_tempo_sppt
+        inq.bulan_tunggakan = self.calc.bln_tunggakan
+        return inq
 
     def _payment_response(self):
         bank_name = self.conf['name']
