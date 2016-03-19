@@ -24,9 +24,6 @@ engine = create_engine(db_url, pool_size=db_pool_size,
             max_overflow=db_max_overflow)
 Base.metadata.bind = engine
 
-#from DbTransaction import DbTransaction    
-#for module_name in module_names:
-#    print('Module: ' + module_name)
 sys.path[0:0] = ['/usr/share/opensipkd-forwarder/modules/bca']
 module_name = 'bca_db_transaction'
 module = __import__(module_name)
