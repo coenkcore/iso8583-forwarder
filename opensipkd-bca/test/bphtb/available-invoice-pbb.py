@@ -7,8 +7,8 @@ from base_models import (
     Base,
     )
 sys.path[0:0] = ['/etc/opensipkd']
-from pbb_conf import (
-    db_url, 
+from bca_conf import (
+    pbb_db_url as db_url, 
     )
 engine = create_engine(db_url)
 Base.metadata.bind = engine

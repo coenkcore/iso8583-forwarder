@@ -38,7 +38,7 @@ if __name__ == '__main__':
     import sys
     from pprint import pprint
     from optparse import OptionParser
-    from pbb_conf import host
+    from bca_conf import host
 
     invoice_id = '3278009008003035002006'
     streamer_name = 'bjb_with_suffix'

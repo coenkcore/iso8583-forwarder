@@ -5,6 +5,14 @@ module_names  = {
         #'padl':'padl',
         }
 db_url   = 'postgresql://aagusti:a@localhost/h2h'
+pbb_db_url = 'postgresql://aagusti:a@localhost/bphtb'
+pbb_db_schema = 'public'
+is_update_sppt = True
+bphtb_db_url = 'postgresql://aagusti:a@localhost/bphtb'
+bphtb_db_schema = 'bphtb'
+padl_db_url = 'postgresql://aagusti:a@localhost/padl'
+padl_db_schema = 'padl'
+
 # Tuning
 # http://docs.sqlalchemy.org/en/rel_0_9/core/pooling.html
 db_pool_size = 50
@@ -17,10 +25,8 @@ nip_rekam_byr_sppt = '999999999'
 
 host = {
     'bjb_with_suffix': {
-        'kd_kanwil_bank': '22',
-        'kd_kppbb_bank': '11',
-        'kd_bank_tunggal': '01',
-        'kd_bank_persepsi': '01',
+        'kd_kanwil': '22',
+        'kd_kantor': '11',
         'kd_tp': {
             '6010': '17',
             '6011': '18',

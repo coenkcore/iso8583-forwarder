@@ -11,8 +11,8 @@ from models import (
     Pembayaran,
     )
 sys.path[0:0] = ['/etc/opensipkd']
-from pbb_conf import persen_denda
 
+from bca_conf import persen_denda
 
 def query_sppt(propinsi, kabupaten, kecamatan, kelurahan, blok, urut,
         jenis, tahun):

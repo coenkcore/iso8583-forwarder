@@ -19,7 +19,7 @@ from bca_conf import (
     db_pool_size,
     db_max_overflow,
     )
- print    db_url
+
 engine = create_engine(db_url, pool_size=db_pool_size,
             max_overflow=db_max_overflow)
 Base.metadata.bind = engine

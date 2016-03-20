@@ -1,9 +1,32 @@
 import sys
-import traceback
-from StringIO import StringIO
-from random import randrange
-from types import DictType
-from ISO8583.ISO8583 import ISO8583
+#import traceback
+#from StringIO import StringIO
+#from random import randrange
+#from types import DictType
+#from ISO8583.ISO8583 import ISO8583
+
+from datetime import datetime
+
+sys.path[0:0] = ['/etc/opensipkd']
+from bca_conf import (
+    #host,
+    is_update_sppt,
+    nip_rekam_byr_sppt,
+    )
+sys.path[0:0] = ['/usr/share/opensipkd-forwarder/modules/bca/']
+from pbb import PbbDbSession
+from log_models import MyFixLength
+
+sys.path[0:0] = ['/usr/share/opensipkd/modules']
+from tools import FixLength
+
+#LOCAL CLASS
+from pbb_structure import INVOICE_ID, INVOICE_PROFILE
+from CalculateInvoice import (
+    CalculateInvoice,
+    query_sppt,
+    )
+   
 from models import (
     Invoice,
     Pembayaran,
@@ -12,45 +35,8 @@ from models import (
     Kabupaten,
     Propinsi,
     )
-
-from datetime import datetime
-
-
-sys.path[0:0] = ['/usr/share/opensipkd/modules']
-from tools import FixLength
-#from base_models import DBSession
-sys.path[0:0] = ['/etc/opensipkd']
-from pbb_conf import (
-    #host,
-    is_update_sppt,
-    nip_rekam_byr_sppt,
-    )
-sys.path[0:0] = ['/usr/share/opensipkd-forwarder/modules/bca/']
-from pbb import PbbDbSession
-
-sys.path[0:0] = ['/usr/share/opensipkd/modules']
-from tools import FixLength
-
-#sys.path[0:0] = ['/usr/share/opensipkd-forwarder/modules/bca']
-class MyFixLength(FixLength):
-    def get(self, name):
-        return self.fields[name]['value'] or None
-
-from pbb_structure import INVOICE_ID, INVOICE_PROFILE
-from CalculateInvoice import (
-    CalculateInvoice,
-    query_sppt,
-    )
     
 from DbTools import query_pembayaran
-
-#from PaymentReversal import PaymentReversal
-
-#from pbb_models import (
-#    INQUIRY_SEQ,
-#    Payment,
-#    Reversal,
-#    )
 
 def cari_kelurahan(propinsi, kabupaten, kecamatan, kelurahan):
     q = PbbDbSession.query(Kelurahan).filter_by(
@@ -118,14 +104,10 @@ def sppt2nop(sppt):
     return sppt.kd_propinsi + sppt.kd_dati2 + sppt.kd_kecamatan + \
            sppt.kd_kelurahan + sppt.kd_blok + sppt.no_urut + sppt.kd_jns_op
 
-           
-class MyFixLength(FixLength):
-    def get(self, name):
-        return self.fields[name]['value'] or None
-
 FIELD_BANK = ['kd_kanwil', 'kd_kantor', 'kd_tp']
 FIELD_BANK_NON_TP = FIELD_BANK[:-1]
 
+           
 class PbbDbTransaction(): #
     def __init__(self, *args, **kwargs):
         self.invoice_id = MyFixLength(INVOICE_ID)

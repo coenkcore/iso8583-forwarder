@@ -34,12 +34,15 @@ from bca_structure import (
     )
 sys.path[0:0] = ['/usr/share/opensipkd-forwarder/modules/bca/pbb']
 from pbb_db_transaction import PbbDbTransaction
+sys.path[0:0] = ['/usr/share/opensipkd-forwarder/modules/bca/bphtb']
+from bphtb_fix_db_transaction import BphtbDbTransaction
 from pbb_reversal import PbbReversal
 
 from log_models import (
 #    INQUIRY_SEQ,
     Payment,
     Reversal,
+    MyFixLength
     )
 
 def inquiry_id():
@@ -82,29 +85,30 @@ class BcaDbTransaction(Transaction):
         
     def is_bphtb(self):
         code = self.from_iso.get_value(3).strip()
+        print code
         return code in ['341066','541066']
     
     def is_padl(self):
         code = self.from_iso.get_value(3).strip()
         return code in ['300001','500001']
         
-    # def get_calc_cls(self): # override
-        # return
-
-    # def invoice_id2profile(self):
-        # pass
-    # def sppt2profile(self): # override
-        # pass
-
+    def is_bca(self):
+        code = self.from_iso.get_value(3).strip()
+        return code in ['300801','500801']
+        
     def set_invoice_profile(self):
         v = self.calc.invoice_profile.get_raw()
         self.setBit(62, v) 
 
     def _inquiry_response(self):
         self.init_id()
-        
+
         if self.is_pbb():
             inv = PbbDbTransaction(invoice_id=self.invoice_id_raw, conf=self.conf,
+                   channel=self.get_channel())
+            self.calc = inv.get_invoice()
+        elif self.is_bphtb():
+            inv = BphtbDbTransaction(invoice_id=self.invoice_id_raw, conf=self.conf,
                    channel=self.get_channel())
             self.calc = inv.get_invoice()
         else:
@@ -140,14 +144,14 @@ class BcaDbTransaction(Transaction):
         
     def inquiry_response(self):
         self.setBit(39, '00')
-        try:
-            self._inquiry_response()
-        except:
-            f = StringIO()
-            traceback.print_exc(file=f)
-            self.log_error(f.getvalue())
-            f.close()
-            self.ack_other('other error')
+        #try:
+        self._inquiry_response()
+        # except:
+            # f = StringIO()
+            # traceback.print_exc(file=f)
+            # self.log_error(f.getvalue())
+            # f.close()
+            # self.ack_other('other error')
 
     def create_inquiry(self): # override
         inv = self.calc.invoice

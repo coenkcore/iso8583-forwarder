@@ -17,7 +17,11 @@ from sqlalchemy import (
     ForeignKey,
     BigInteger,
     )
-
+from tools import FixLength
+    
+class MyFixLength(FixLength):
+    def get(self, name):
+        return self.fields[name]['value'] or None
 
 # http://docs.sqlalchemy.org/en/rel_0_7/dialects/oracle.html
 INQUIRY_SEQ = Sequence('inquiry_seq')
