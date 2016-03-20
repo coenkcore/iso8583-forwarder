@@ -13,6 +13,7 @@ INVOICE_PROFILE = [
     ('tagihan', 12,'N'),
     ('denda', 12,'N'),
     ('jumlah', 12,'N'),
+    ('masa_pajak', 20 ,'ANS'),
     ('jns_perolehan', 2 ,'N'),
     ('nilai_perolehan', 12,'N'),
     ('notaris', 35,'ANS'),

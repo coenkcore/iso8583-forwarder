@@ -10,7 +10,7 @@ pbb_db_schema = 'public'
 is_update_sppt = True
 bphtb_db_url = 'postgresql://aagusti:a@localhost/bphtb'
 bphtb_db_schema = 'bphtb'
-padl_db_url = 'postgresql://aagusti:a@localhost/padl'
+padl_db_url = 'postgresql://aagusti:a@localhost/padl_bgr'
 padl_db_schema = 'padl'
 
 # Tuning

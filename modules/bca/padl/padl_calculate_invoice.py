@@ -7,9 +7,9 @@ from tools import (
     FixLength,
     )
 from base_models import DBSession
-from models import (
+from padl_models import (
     Invoice,
-    Payment,
+    Pembayaran,
     )
 sys.path.insert(0, '/etc/opensipkd')
 from padl_fix_conf import persen_denda
@@ -35,7 +35,7 @@ class CalculateInvoice(object):
         self.denda = self.hitung_denda() + self.bunga
         self.denda = round_up(self.denda)
         self.total = self.tagihan + self.denda
-        q = DBSession.query(func.sum(Payment.jml_bayar).label('jml')).\
+        q = DBSession.query(func.sum(Pembayaran.jml_bayar).label('jml')).\
                 filter_by(spt_id=self.invoice.id)
         pay = q.first()
         print('*** DEBUG: Total tagihan Rp {n}'.format(n=self.total))
@@ -47,6 +47,8 @@ class CalculateInvoice(object):
             print('*** DEBUG: Belum ada pembayaran.')
 
     def hitung_denda(self):
+        if not self.invoice.jatuhtempotgl:
+           return 0
         jatuh_tempo = self.invoice.jatuhtempotgl
         kini = datetime.now()
         x = (kini.year - jatuh_tempo.year) * 12

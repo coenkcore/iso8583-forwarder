@@ -32,12 +32,15 @@ from bca_structure import (
     ERR_INVOICE_OPEN,
     ERR_SETTLEMENT_DATE,
     )
-sys.path[0:0] = ['/usr/share/opensipkd-forwarder/modules/bca/pbb']
-from pbb_db_transaction import PbbDbTransaction
-from pbb_reversal import PbbReversal
-sys.path[0:0] = ['/usr/share/opensipkd-forwarder/modules/bca/bphtb']
-from bphtb_fix_db_transaction import BphtbDbTransaction
-from bphtb_reversal import BphtbReversal
+#sys.path[0:0] = ['/usr/share/opensipkd-forwarder/modules/bca/pbb']
+from pbb.pbb_db_transaction import PbbDbTransaction
+from pbb.pbb_reversal import PbbReversal
+#sys.path[0:0] = ['/usr/share/opensipkd-forwarder/modules/bca/bphtb']
+from bphtb.bphtb_fix_db_transaction import BphtbDbTransaction
+from bphtb.bphtb_reversal import BphtbReversal
+
+from padl.padl_transaction import PadlDbTransaction
+from padl.padl_reversal import PadlReversal
 
 from log_models import (
 #    INQUIRY_SEQ,
