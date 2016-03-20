@@ -120,7 +120,8 @@ class BcaDbTransaction(Transaction):
                    channel=self.get_channel())
             self.calc = inv.get_invoice()
         elif self.is_bca():
-            if self.invoice_id_raw[4,2]=='01':
+            print '**** DEBUG BCA'
+            if self.invoice_id_raw[4:2]=='01':
                 inv = BphtbDbTransaction(invoice_id=self.invoice_id_raw, conf=self.conf,
                        channel=self.get_channel())
                 self.calc = inv.get_invoice()
@@ -128,9 +129,9 @@ class BcaDbTransaction(Transaction):
                 inv = PadlDbTransaction(invoice_id=self.invoice_id_raw, conf=self.conf,
                        channel=self.get_channel())
                 self.calc = inv.get_invoice()
-            
         else:
             return self.ack_other('other error')
+            
         if not self.calc.invoice:
             return self.ack_not_available()    
             
@@ -145,6 +146,7 @@ class BcaDbTransaction(Transaction):
             return self.ack_other('other error')
         
         self.setBit(4, self.calc.total)
+        #print self.calc.invoice_profile.get_raw()
         self.set_invoice_profile()
         
         #self.ack_ok
@@ -221,7 +223,8 @@ class BcaDbTransaction(Transaction):
                    channel=self.get_channel())
             self.calc = inv.get_invoice()
         elif self.is_bca():
-            if self.invoice_id_raw[4,2]=='01':
+            print '**** DEBUG BCA'
+            if self.invoice_id_raw[4:2]=='01':
                 inv = BphtbDbTransaction(invoice_id=self.invoice_id_raw, conf=self.conf,
                        channel=self.get_channel())
                 self.calc = inv.get_invoice()
@@ -357,6 +360,7 @@ class BcaDbTransaction(Transaction):
         elif self.is_padl():
             rev = PadlReversal(pay) 
         elif self.is_bca():
+            print '**** DEBUG BCA'
             if self.invoice_id_raw[4,2]=='01':
                 rev = BphtbReversal(pay) 
             else:

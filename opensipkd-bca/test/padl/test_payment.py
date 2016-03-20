@@ -13,7 +13,7 @@ from bca_structure import (
 class Payment(Inquiry):
     def payment_request(self, invoice_id, inq_resp_iso):
         self.inquiry_request(invoice_id)
-        self.setBit(3, PAYMENT_CODE[3])
+        self.setBit(3, PAYMENT_CODE[2])
         jml_bayar = inq_resp_iso.getBit(4)
         self.setBit(4, jml_bayar)
         ntb = datetime.now().strftime('%Y%m%d%H%M%S')

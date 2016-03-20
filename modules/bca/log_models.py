@@ -66,7 +66,7 @@ class Payment(Base, CommonModel):
     channel = Column(String(4))
     status = Column(Integer, default=0, nullable=False)
     __table_args__ = (
-        UniqueConstraint('invoice_id', 'ke'),
+        UniqueConstraint('invoice_id', 'ntb'),
         )
 
 class Reversal(Base, CommonModel):

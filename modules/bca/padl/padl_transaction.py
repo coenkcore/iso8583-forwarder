@@ -46,6 +46,8 @@ class PadlDbTransaction():
         if self.calc.invoice:
             self.calc.hitung()
             self.set_invoice_profile()
+            self.calc.invoice_profile = self.invoice_profile
+            
         return self.calc
         
     def set_invoice_profile(self):
@@ -70,40 +72,59 @@ class PadlDbTransaction():
             'tagihan': self.calc.tagihan,
             'denda': self.calc.denda,
             'jumlah': self.calc.total,
-            'jth_tempo': self.invoice.tgl_jatuh_tempo,
-            'masa': " s.d ".join([self.calc.invoice.masadari.strftime('%Y%m%d'),
-                                  self.calc.invoice.masasd.strftime('%Y%m%d')]),
+            'jth_tempo': self.calc.invoice.jatuhtempotgl.strftime('%Y%m%d'),
+            'masa_pajak': " s.d ".join([self.calc.invoice.masadari.strftime('%d-%m-%Y'),
+                                  self.calc.invoice.masasd.strftime('%d-%m-%Y')]),
             })
-
+        
     def commit(self):
+        #pass
         PadlDBSession.flush()
         PadlDBSession.commit()
-        self.ack()
+        #self.ack()
 
     def get_sspdno(self):
-        q = PadlDBSession.query(Pembayaran).filter_by(tahun=self.calc.invoice.tahun).\
+        q = PadlDBSession.query(Pembayaran).filter_by(tahun=datetime.now().year).\
                 order_by(Pembayaran.sspdno.desc())
         pay = q.first()
         if pay:
             return pay.sspdno + 1
         return 1
-
-    def save_payment(self):
+        
+    def get_pay_seq(self):
+        # q = BphtbDBSession.query(Pembayaran).filter_by(sspd_id=self.calc.invoice.id).\
+                           # order_by('pembayaran_ke desc')
+        # pay = q.first()
+        # if pay:
+            # return pay.pembayaran_ke + 1
+        return 1
+        
+    def create_payment(self, *args, **kwargs):
+        self.seq = kwargs['seq']
+        self.bank_id = kwargs['bank_id']
+        self.ntb = kwargs['ntb']
+        self.tgl_bayar = kwargs['tgl_bayar']
+        ke = self.get_pay_seq() 
+        #self._create_payment()
+        
         sspdno = self.get_sspdno()
-        bank_id = self.get_bank_id()
-        channel_id = self.get_channel_id()
         pay = Pembayaran()
-        pay.tahun = self.invoice_id['Tahun']
+        pay.tahun = datetime.now().year #self.invoice_id['tahun']
         pay.sspdno = sspdno 
+        pay.sspdtgl = self.tgl_bayar.date() 
         pay.spt_id = self.calc.invoice.id
         pay.denda = pay.bunga = self.calc.denda
         pay.jml_bayar = self.calc.total
         pay.create_date = pay.write_date = pay.sspdtgl = datetime.now()
         pay.printed = 1 
+        pay.tp_id = self.bank_id 
+        # pay.bulan_telat
+        # pay.hitung_bunga
+        pay.sspdjam = self.tgl_bayar.time()
         PadlDBSession.add(pay)
         self.calc.set_paid()
         PadlDBSession.flush()
-        return pay
+        return pay, ke
 
     # Invoice Profile #
     def get_customer(self):

@@ -87,7 +87,6 @@ class BphtbDbTransaction():
         self.calc = CalculateInvoice(self.invoice_id_raw)
 
         if self.calc.invoice:
-        
             invoice = self.calc.invoice
             cust = self.get_customer()
             kec = self.get_kecamatan()

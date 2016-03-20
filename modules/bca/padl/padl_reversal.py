@@ -1,39 +1,54 @@
-class PadlReversal():
-    # Override
-    def reversal_response(self):
-        self.invoice_id_raw = self.from_iso.get_invoice_id()
-        self.invoice_id = decode_invoice_id_raw(self.invoice_id_raw)
-        if not self.invoice_id.set_raw(self.invoice_id_raw):
-            return self.ack_invalid_invoice_id()
-        self.calc = CalculateInvoice(self.invoice_id['Tahun'],
-                        self.invoice_id['SPT No'])
-        if not self.calc.invoice:
-            return self.ack_invoice_not_available()
-        ntb = self.from_iso.get_ntb()
-        q = PadlDBSession.query(IsoPayment).filter_by(
-                invoice_id=self.calc.invoice.id, ntb=ntb) 
-        iso_pay = q.first()
-        if not iso_pay:
-            return self.ack_invoice_not_available()
-        q = PadlDBSession.query(IsoReversal).filter_by(id=iso_pay.id)
-        iso_rev = q.first()
-        if iso_rev:
-            return self.ack_already_canceled()
-        self.save_reversal(iso_pay)
+import sys
+sys.path[0:0] = ['/usr/share/opensipkd-forwarder/modules/bca/']
+from padl import PadlDBSession
+from padl.padl_models import Pembayaran, Invoice
+from padl.padl_structure import INVOICE_ID, INVOICE_PROFILE
+#from padl.padl_calculate_invoice import Common
+from log_models import MyFixLength
 
-    def save_reversal(self, iso_pay):
-        q = PadlDBSession.query(Payment).filter_by(id=iso_pay.id)
-        pay = q.first()
-        if not pay:
-            return self.ack_payment_not_found()
-        iso_request = self.from_iso.raw.upper()
-        iso_request = '0400' + iso_request[4:]
-        pay.denda = pay.bunga = pay.jml_bayar = 0
-        PadlDBSession.add(pay)
-        self.calc.set_unpaid()
-        iso_rev = IsoReversal()
-        iso_rev.id = iso_pay.id
-        iso_rev.iso_request = iso_request
-        PadlDBSession.add(iso_rev)
-        self.commit()
+def _pay2bayar(invoice_id):
+    return PadlDBSession.query(Pembayaran).filter_by(
+                spt_id = invoice_id,
+                enabled = 1
+                )
+def pay2bayar(pay):
+    q = _pay2bayar(pay.id)
+    #q = q.filter_by(pembayaran_ke=pay.ke)
+    return q.first()
+
+def pay2invoice(invoice_id):
+    q = PadlDBSession.query(Invoice).filter_by(
+                tahun = invoice_id['tahun'],
+                #kode = invoice_id['kode'][-1],
+                sptno = invoice_id['spt_no'])
+    return q.first() 
+    
+class ReversalCommon(object):
+    def set_unpaid(self):
+        self.invoice.status_pembayaran = 0
+        self.bayar.jml_bayar = 0 
+        self.bayar.denda = 0
+        self.bayar.bunga = 0
+        self.bayar.enabled = 0
+
+class PadlReversal(ReversalCommon):
+    def __init__(self, pay):
+        self.invoice_id = MyFixLength(INVOICE_ID)
+        self.pay = pay
+        self.invoice_id.set_raw(pay.invoice_id)
+        self.invoice = pay2invoice(self.invoice_id)
+        if not self.invoice:
+            return
+        self.bayar = pay2bayar(self.invoice)
+        
+    def is_paid(self):
+        return int(self.invoice.status_pembayaran)
+    
+    def commit(self):
+        PadlDBSession.add(self.invoice)
+        PadlDBSession.add(self.bayar)
+        PadlDBSession.flush()
+        PadlDBSession.commit()
+
+        
 

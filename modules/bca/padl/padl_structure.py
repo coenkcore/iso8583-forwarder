@@ -21,7 +21,7 @@ INVOICE_ID = [
 # Bit 62 #
 ##########
 INVOICE_PROFILE = [
-    ('npwpd', 22,'N'),
+    ('npwpd', 22,'ANS'),
     ('nama', 35,'ANS'),
     ('alamat', 35,'ANS'),
     ('kode_pajak', 15,'ANS'),
@@ -30,5 +30,5 @@ INVOICE_PROFILE = [
     ('tagihan', 12,'N'),
     ('denda', 12,'N'),
     ('jumlah', 12,'N'),
-    ('masa_pajak', 20 ,'ANS'),
+    ('masa_pajak', 25 ,'ANS'),
 ]

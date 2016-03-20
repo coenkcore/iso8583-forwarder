@@ -19,5 +19,5 @@ session_factory = sessionmaker()
 PadlDBSession = scoped_session(session_factory)
 
 engine_padl = create_engine(padl_db_url, pool_size=db_pool_size,
-            max_overflow=db_max_overflow, echo=True)
+            max_overflow=db_max_overflow, echo=False)
 PadlBase.metadata.bind = engine_padl
