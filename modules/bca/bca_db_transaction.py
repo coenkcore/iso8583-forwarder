@@ -111,6 +111,20 @@ class BcaDbTransaction(Transaction):
             inv = BphtbDbTransaction(invoice_id=self.invoice_id_raw, conf=self.conf,
                    channel=self.get_channel())
             self.calc = inv.get_invoice()
+        elif self.is_padl():
+            inv = PadlDbTransaction(invoice_id=self.invoice_id_raw, conf=self.conf,
+                   channel=self.get_channel())
+            self.calc = inv.get_invoice()
+        elif self.is_bca():
+            if self.invoice_id_raw[4,2]=='01':
+                inv = BphtbDbTransaction(invoice_id=self.invoice_id_raw, conf=self.conf,
+                       channel=self.get_channel())
+                self.calc = inv.get_invoice()
+            else:
+                inv = PadlDbTransaction(invoice_id=self.invoice_id_raw, conf=self.conf,
+                       channel=self.get_channel())
+                self.calc = inv.get_invoice()
+            
         else:
             return self.ack_other('other error')
         if not self.calc.invoice:
@@ -180,13 +194,37 @@ class BcaDbTransaction(Transaction):
         self.conf.update(host[bank_name])
         
         # self.copy([4, 48, 62]) # belum di-copy oleh set_transaction_response()
-        
+        #FROM BPHTB
+        #transaction_datetime, transmission_datetime, settlement_date = \
+        #    self.from_iso.get_dates()
+        #if not transaction_datetime or not transmission_datetime or \
+        #    not settlement_date:
+        #    return
+        ##################################################
+            
         self.setBit(47, '') # default payment ID
         
         if self.is_pbb():
             inv = PbbDbTransaction(invoice_id=self.invoice_id_raw, conf=self.conf,
                    channel=self.get_channel())
             self.calc = inv.get_invoice()
+        elif self.is_bphtb():
+            inv = BphtbDbTransaction(invoice_id=self.invoice_id_raw, conf=self.conf,
+                   channel=self.get_channel())
+            self.calc = inv.get_invoice()
+        elif self.is_padl():
+            inv = PadlDbTransaction(invoice_id=self.invoice_id_raw, conf=self.conf,
+                   channel=self.get_channel())
+            self.calc = inv.get_invoice()
+        elif self.is_bca():
+            if self.invoice_id_raw[4,2]=='01':
+                inv = BphtbDbTransaction(invoice_id=self.invoice_id_raw, conf=self.conf,
+                       channel=self.get_channel())
+                self.calc = inv.get_invoice()
+            else:
+                inv = PadlDbTransaction(invoice_id=self.invoice_id_raw, conf=self.conf,
+                       channel=self.get_channel())
+                self.calc = inv.get_invoice()
         else:
             return self.ack_other('other error')
             
@@ -200,7 +238,11 @@ class BcaDbTransaction(Transaction):
         if self.total_bayar != total_tagihan:
             return self.ack_insufficient_fund(total_bayar, total_tagihan)
             
-        bayar, urutan_ke = inv.create_payment(self.total_bayar, self.tgl_bayar)
+        bayar, urutan_ke = inv.create_payment(total_bayar=self.total_bayar, 
+                                              tgl_bayar=self.tgl_bayar,
+                                              seq = self.get_value(37),
+                                              ntb = self.get_value(48),
+                                              bank_id=self.bank_id)
         payment = self.log_payment(urutan_ke) 
         
         if not payment:
@@ -273,7 +315,7 @@ class BcaDbTransaction(Transaction):
         
     def init_id_pay(self):
         self.total_bayar   = int(self.from_iso.get_value(4))
-        self.tgl_bayar     = self.from_iso.get_transaction_date()
+        self.tgl_bayar     = self.from_iso.get_transaction_datetime()
         self.ntb           = self.from_iso.get_value(37).strip()
             
     ############
@@ -313,6 +355,43 @@ class BcaDbTransaction(Transaction):
             if not rev.is_paid():
                 return self.ack_invoice_open(self.invoice_id_raw)
             rev.set_unpaid()
+        elif self.is_bphtb():
+            rev = BphtbReversal(pay) 
+            if not rev.bayar:
+                return self.ack_payment_not_found_2(self.invoice_id_raw, pay.ke)
+            if not rev.invoice:
+                return self.ack_not_available_2(self.invoice_id_raw)
+            if not rev.is_paid():
+                return self.ack_invoice_open(self.invoice_id_raw)
+            rev.set_unpaid()
+        elif self.is_padl():
+            rev = PadlReversal(pay) 
+            if not rev.bayar:
+                return self.ack_payment_not_found_2(self.invoice_id_raw, pay.ke)
+            if not rev.invoice:
+                return self.ack_not_available_2(self.invoice_id_raw)
+            if not rev.is_paid():
+                return self.ack_invoice_open(self.invoice_id_raw)
+            rev.set_unpaid()
+        elif self.is_bca():
+            if self.invoice_id_raw[4,2]=='01':
+                rev = BphtbReversal(pay) 
+                if not rev.bayar:
+                    return self.ack_payment_not_found_2(self.invoice_id_raw, pay.ke)
+                if not rev.invoice:
+                    return self.ack_not_available_2(self.invoice_id_raw)
+                if not rev.is_paid():
+                    return self.ack_invoice_open(self.invoice_id_raw)
+                rev.set_unpaid()
+            else:
+                rev = PadlReversal(pay) 
+                if not rev.bayar:
+                    return self.ack_payment_not_found_2(self.invoice_id_raw, pay.ke)
+                if not rev.invoice:
+                    return self.ack_not_available_2(self.invoice_id_raw)
+                if not rev.is_paid():
+                    return self.ack_invoice_open(self.invoice_id_raw)
+                rev.set_unpaid()
             
         else:
             return self.ack_other('other error')

@@ -76,6 +76,22 @@ class CalculateInvoice(CommonInvoice):
             # self.payment = self.get_payment()
 
     def hitung(self):
+        # bayar = PbbDbSession.query(
+                    # func.sum(Pembayaran.jml_sppt_yg_dibayar).\
+                         # label('jml_sppt_yg_dibayar'),
+                    # func.sum(Pembayaran.denda_sppt).\
+                         # label('denda_sppt')).\
+                    # filter_by(kd_propinsi=self.invoice.kd_propinsi,
+                              # kd_dati2=self.invoice.kd_dati2,
+                              # kd_kecamatan=self.invoice.kd_kecamatan,
+                              # kd_kelurahan=self.invoice.kd_kelurahan,
+                              # kd_blok=self.invoice.kd_blok,
+                              # no_urut=self.invoice.no_urut,
+                              # kd_jns_op=self.invoice.kd_jns_op,
+                              # thn_pajak_sppt=self.invoice.thn_pajak_sppt).one()
+        # jml_bayar = bayar.jml_sppt_yg_dibayar or 0
+        # denda_lalu = bayar.denda_sppt or 0
+        
         kini = datetime.now()
         jatuh_tempo = self.invoice.tgl_jatuh_tempo
         self.tagihan = round_up(self.invoice.bphtb_harus_dibayarkan)

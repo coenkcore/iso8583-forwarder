@@ -30,7 +30,7 @@ def luas(n, jumlah_nol=0):
     return s.replace('.', '')
 from bphtb_models import (
     #Invoice,
-    #Payment,
+    Payment,
     Customer,
     Kecamatan,
     Kelurahan,
@@ -71,6 +71,15 @@ class BphtbDbTransaction():
                 kd_kelurahan = self.calc.invoice.kd_kelurahan)
         return q.first()
         
+    def get_pay_seq(self):
+        q = BphtbDBSession.query(Payment).filter_by(sspd_id=self.calc.invoice.id).\
+                           order_by('pembayaran_ke desc')
+        pay = q.first()
+        if pay:
+            return pay.pembayaran_ke + 1
+        return 1
+
+        
     def get_invoice(self):
         if not self.invoice_id.set_raw(self.invoice_id_raw):
             return self.ack_invalid_number()
@@ -99,7 +108,7 @@ class BphtbDbTransaction():
                 'notaris' : cust.nama,
                 'rt_wp': invoice.wp_rt, 
                 'rw_wp': invoice.wp_rw, 
-                'kode_pos_wp': invoice.wp_kdpos, 
+                'kode_pos_wp': invoice.wp_kdpos.strip() and invoice.wp_kdpos.strip()  or '00000', 
                 'kelurahan_wp': invoice.wp_kelurahan, 
                 'kecamatan_wp': invoice.wp_kecamatan, 
                 'kota_wp': invoice.wp_kota,
@@ -144,59 +153,72 @@ class BphtbDbTransaction():
     ###########
     # Payment #
     ###########
-    def _payment_response(self):
-        self.copy([4, 58]) # belum di-copy oleh set_transaction_response()
-        self.set_ntp()
-        inv = self.get_invoice()
-        if not inv:
-            return
-        if self.calc.paid:
-            return self.ack_already_paid()
-        total_bayar = self.get_amount()
-        if total_bayar != self.calc.total:
-            return self.ack_insufficient_fund(total_bayar)
-        self.calc.set_paid()
-        ntp = self.create_payment()
-        self.commit()
-        self.set_ntp(ntp)
-
-    def payment_response(self):
-        bank_name = self.conf['name']
-        self.conf.update(host[bank_name])
-        akhiran_nol = self.get_jml_akhiran_nol()
-        profile = get_invoice_profile(akhiran_nol)
-        self.invoice_profile = FixLength(profile)
-        self.invoice_id_raw = self.from_iso.get_invoice_id()
-        cls = self.get_calc_cls()
-        try:
-            self._payment_response()
-        except:
-            f = StringIO()
-            traceback.print_exc(file=f)
-            self.log_error(f.getvalue())
-            f.close()
-            self.ack_other('other error')
-
-    def create_payment_id(self):
-        prefix = self.get_prefix_code()
-        max_loop = 10
-        loop = 0
-        while True:
-            acak = randrange(11111111, 99999999)
-            acak = str(acak)
-            trx_id = ''.join([prefix, acak])
-            if not self.is_payment_id_found(trx_id):
-                return trx_id
-            loop += 1
-            if loop == max_loop:
-                raise Exception('*** Max loop for create payment ID. ' + \
-                        'Call your programmer please.')
-
     def is_payment_id_found(self, trx_id):
         raise OverridePlease
 
-    def create_payment(self):
-        raise OverridePlease
+    def create_payment(self, *args, **kwargs):
+        self.seq = kwargs['seq']
+        self.bank_id = kwargs['bank_id']
+        self.ntb = kwargs['ntb']
+        pay, ke = self._create_payment(kwargs['tgl_bayar'])
+        #DBSession.add(pay)
+        #DBSession.flush() # get payment id
+        return pay, ke 
+        
+    def _create_payment(self, tgl):
+        cust = self.get_customer()
+        pay_seq = self.get_pay_seq()
+        inv = self.calc.invoice
+        pay = Payment()
+        pay.tanggal = tgl.date()
+        pay.jam = tgl.time()
+        pay.seq = self.seq
+        pay.transno = self.ntb
+        pay.bankid = self.bank_id
+        #pay.cabang = self.get_value(107)[:4]
+        #pay.users = self.get_value(107)[4:]
+        pay.txs = self.calc.invoice_struct['kode']
+        pay.sspd_id = inv.id
+        pay.nop = self.calc.nop_struct.get_raw()
+        pay.tahun = inv.tahun
+        pay.kd_propinsi = inv.kd_propinsi
+        pay.kd_dati2 = inv.kd_dati2
+        pay.kd_kecamatan = inv.kd_kecamatan
+        pay.kd_kelurahan = inv.kd_kelurahan
+        pay.kd_blok = inv.kd_blok
+        pay.no_urut = inv.no_urut
+        pay.kd_jns_op = inv.kd_jns_op
+        pay.thn_pajak_sppt = inv.thn_pajak_sppt
+        pay.wp_nama = inv.wp_nama
+        pay.wp_alamat = inv.wp_alamat
+        pay.wp_blok_kav = inv.wp_blok_kav
+        pay.wp_rt = inv.wp_rt
+        pay.wp_rw = inv.wp_rw
+        pay.wp_kelurahan = inv.wp_kelurahan
+        pay.wp_kecamatan = inv.wp_kecamatan
+        pay.wp_kota = inv.wp_kota
+        pay.wp_provinsi = inv.wp_provinsi
+        pay.wp_kdpos = inv.wp_kdpos
+        pay.wp_identitas = inv.wp_identitas
+        pay.wp_identitaskd = inv.wp_identitaskd
+        pay.wp_npwp = inv.wp_npwp
+        pay.notaris = cust.nama 
+        pay.bumi_luas = inv.bumi_luas
+        pay.bumi_njop = inv.bumi_njop
+        pay.bng_luas = inv.bng_luas
+        pay.bng_njop = inv.bng_njop
+        pay.npop = inv.npop
+        pay.bayar = self.calc.total
+        pay.denda = self.calc.denda
+        pay.bphtbjeniskd = inv.perolehan_id
+        pay.no_tagihan = self.invoice_id_raw #get_invoice_id()
+        pay.pembayaran_ke = pay_seq
+        inv.status_pembayaran = 1
+        
+        BphtbDBSession.add(pay)
+        BphtbDBSession.add(inv)
+        return pay, pay_seq
+
 
     def get_real_value(self, value):
         if type(value) is not DictType:
@@ -273,9 +295,9 @@ class BphtbDbTransaction():
         self.ack(RC_OTHER_ERROR, msg)
 
     def commit(self):
-        DBSession.flush()
-        DBSession.commit()
-        self.ack()
+        BphtbDBSession.flush()
+        BphtbDBSession.commit()
+        #self.ack()
 
 ############
 # Reversal #

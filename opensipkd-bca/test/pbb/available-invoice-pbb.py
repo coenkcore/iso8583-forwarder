@@ -13,7 +13,7 @@ from bca_conf import (
 engine = create_engine(db_url)
 Base.metadata.bind = engine
 DBSession.configure(bind=engine)
-sys.path[0:0] = ['/usr/share/doc/opensipkd-bca/test/pbb']
+sys.path[0:0] = ['/usr/share/doc/opensipkd-bca/test/pbb/pbb']
 from available_invoice import AvailableInvoice
 
 

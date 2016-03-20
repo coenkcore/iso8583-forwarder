@@ -6,6 +6,7 @@ import sys
 #from ISO8583.ISO8583 import ISO8583
 
 from datetime import datetime
+from types import DictType
 
 sys.path[0:0] = ['/etc/opensipkd']
 from bca_conf import (
@@ -188,8 +189,10 @@ class PbbDbTransaction(): #
     def nama_propinsi(self):
         return cari_propinsi(self.invoice_id['Propinsi'])
 
-    def create_payment(self, total_bayar,transaction_date):
-        self.transaction_date = transaction_date
+    def create_payment(self, *args, **kwargs):
+        total_bayar = kwargs['total_bayar']
+        transaction_date = kwargs['tgl_bayar']
+        self.transaction_date = transaction_date.date()
         bayar, urutan_bayar = self.bayar(total_bayar)
         return bayar, urutan_bayar
         

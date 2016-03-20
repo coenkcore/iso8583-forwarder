@@ -3,7 +3,7 @@ sys.path.insert(0, '/usr/share/opensipkd/modules')
 from base_models import (
     CommonModel,
     )
-sys.path.insert(0, '/usr/share/opensipkd-forwarder/modules')
+sys.path.insert(0, '/usr/share/opensipkd-forwarder/modules/bca')
 from pbb import (
     PbbBase,
     )
