@@ -11,7 +11,7 @@ from bphtb import BphtbDBSession
 from bphtb_fix_structure import NOP
 from bphtb_models import (
     Invoice,
-    Payment,
+    Pembayaran,
     #IsoPayment,
     )
 from bphtb_fix_structure import INVOICE_ID, NOP, INVOICE_PROFILE
@@ -24,8 +24,8 @@ def query_invoice(tahun, kode, no_sspd):
             tahun = tahun, kode = kode, no_sspd = no_sspd)
 
 def get_last_payment(invoice):
-    q = BphtbDBSession.query(Payment).filter_by(sspd_id=invoice.id)
-    q = q.order_by(Payment.id.desc())
+    q = BphtbDBSession.query(Pembayaran).filter_by(sspd_id=invoice.id)
+    q = q.order_by(Pembayaran.id.desc())
     return q.first()
 
 
@@ -37,9 +37,9 @@ class Common(object):
         self.invoice.status_pembayaran = 1
         BphtbDBSession.add(self.invoice)
 
-    def set_unpaid(self):
-        self.invoice.status_pembayaran = 0
-        BphtbDBSession.add(self.invoice)
+    # def set_unpaid(self):
+        # self.invoice.status_pembayaran = 0
+        # BphtbDBSession.add(self.invoice)
 
 
 class CommonInvoice(Common):

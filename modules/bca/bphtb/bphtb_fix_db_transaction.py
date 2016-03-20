@@ -30,7 +30,7 @@ def luas(n, jumlah_nol=0):
     return s.replace('.', '')
 from bphtb_models import (
     #Invoice,
-    Payment,
+    Pembayaran,
     Customer,
     Kecamatan,
     Kelurahan,
@@ -72,7 +72,7 @@ class BphtbDbTransaction():
         return q.first()
         
     def get_pay_seq(self):
-        q = BphtbDBSession.query(Payment).filter_by(sspd_id=self.calc.invoice.id).\
+        q = BphtbDBSession.query(Pembayaran).filter_by(sspd_id=self.calc.invoice.id).\
                            order_by('pembayaran_ke desc')
         pay = q.first()
         if pay:
@@ -169,7 +169,7 @@ class BphtbDbTransaction():
         cust = self.get_customer()
         pay_seq = self.get_pay_seq()
         inv = self.calc.invoice
-        pay = Payment()
+        pay = Pembayaran()
         pay.tanggal = tgl.date()
         pay.jam = tgl.time()
         pay.seq = self.seq

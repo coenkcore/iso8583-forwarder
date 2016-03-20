@@ -40,6 +40,6 @@ class Invoice(BphtbBase):
     __tablename__ = 'bphtb_sspd'
     __table_args__ = TABLE_ARGS
 
-class Payment(BphtbBase):
+class Pembayaran(BphtbBase):
     __tablename__ = 'bphtb_bank'
     __table_args__ = TABLE_ARGS

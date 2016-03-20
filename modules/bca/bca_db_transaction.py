@@ -34,9 +34,10 @@ from bca_structure import (
     )
 sys.path[0:0] = ['/usr/share/opensipkd-forwarder/modules/bca/pbb']
 from pbb_db_transaction import PbbDbTransaction
+from pbb_reversal import PbbReversal
 sys.path[0:0] = ['/usr/share/opensipkd-forwarder/modules/bca/bphtb']
 from bphtb_fix_db_transaction import BphtbDbTransaction
-from pbb_reversal import PbbReversal
+from bphtb_reversal import BphtbReversal
 
 from log_models import (
 #    INQUIRY_SEQ,
@@ -348,54 +349,26 @@ class BcaDbTransaction(Transaction):
         
         if self.is_pbb():
             rev = PbbReversal(pay) 
-            if not rev.bayar:
-                return self.ack_payment_not_found_2(self.invoice_id_raw, pay.ke)
-            if not rev.invoice:
-                return self.ack_not_available_2(self.invoice_id_raw)
-            if not rev.is_paid():
-                return self.ack_invoice_open(self.invoice_id_raw)
-            rev.set_unpaid()
         elif self.is_bphtb():
             rev = BphtbReversal(pay) 
-            if not rev.bayar:
-                return self.ack_payment_not_found_2(self.invoice_id_raw, pay.ke)
-            if not rev.invoice:
-                return self.ack_not_available_2(self.invoice_id_raw)
-            if not rev.is_paid():
-                return self.ack_invoice_open(self.invoice_id_raw)
-            rev.set_unpaid()
         elif self.is_padl():
             rev = PadlReversal(pay) 
-            if not rev.bayar:
-                return self.ack_payment_not_found_2(self.invoice_id_raw, pay.ke)
-            if not rev.invoice:
-                return self.ack_not_available_2(self.invoice_id_raw)
-            if not rev.is_paid():
-                return self.ack_invoice_open(self.invoice_id_raw)
-            rev.set_unpaid()
         elif self.is_bca():
             if self.invoice_id_raw[4,2]=='01':
                 rev = BphtbReversal(pay) 
-                if not rev.bayar:
-                    return self.ack_payment_not_found_2(self.invoice_id_raw, pay.ke)
-                if not rev.invoice:
-                    return self.ack_not_available_2(self.invoice_id_raw)
-                if not rev.is_paid():
-                    return self.ack_invoice_open(self.invoice_id_raw)
-                rev.set_unpaid()
             else:
                 rev = PadlReversal(pay) 
-                if not rev.bayar:
-                    return self.ack_payment_not_found_2(self.invoice_id_raw, pay.ke)
-                if not rev.invoice:
-                    return self.ack_not_available_2(self.invoice_id_raw)
-                if not rev.is_paid():
-                    return self.ack_invoice_open(self.invoice_id_raw)
-                rev.set_unpaid()
-            
         else:
             return self.ack_other('other error')
 
+        if not rev.bayar:
+            return self.ack_payment_not_found_2(self.invoice_id_raw, pay.ke)
+        if not rev.invoice:
+            return self.ack_not_available_2(self.invoice_id_raw)
+        if not rev.is_paid():
+            return self.ack_invoice_open(self.invoice_id_raw)
+        rev.set_unpaid()
+        
         reversal = Reversal(payment_id=pay.id) # Catatan tambahan
         reversal.iso_request = reversal_iso_request
         pay.status = 0
