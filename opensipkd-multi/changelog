@@ -1,0 +1,489 @@
+opensipkd-pbb (0.6.8); urgency=medium
+
+  * Penambahan fungsi get_transaction_date().
+  * Modul cimahi, depok, plara, dan serang field tgl_pembayaran_sppt tidak
+    lagi diisi dengan inq.settlement melainkan
+    from_iso.get_transaction_date().
+  * Contoh konfigurasi untuk wilayah Kuningan.
+
+ -- Owo Sugiana <sugiana@opensipkd.com> 4 Mar 2016
+
+opensipkd-pbb (0.6.7); urgency=medium
+
+  * Modul cikarang get_transaction_datetime() perlu dipangkas jamnya dengan
+    date().
+
+ -- Owo Sugiana <sugiana@opensipkd.com> 11 Peb 2016
+
+opensipkd-pbb (0.6.6); urgency=high
+
+  * Bug fixed pada modul cikarang saat ada denda_sppt dimana ada operasi
+    pengurangan antara tipe data float dan Decimal. Terjadi di Kota Bogor yang
+    menggunakan PostgreSQL.
+
+ -- Owo Sugiana <sugiana@oepnsipkd.com> 3 Peb 2016
+
+opensipkd-pbb (0.6.5-2); urgency=low
+
+  * Contoh konfigurasi untuk Kota Banjar.
+
+ -- Owo Sugiana <sugiana@opensipkd.com> 28 Des 2015
+
+opensipkd-pbb (0.6.5-1); urgency=low
+
+  * Contoh konfigurasi untuk Kota Bogor dan Sumedang.
+  * Perbaikan offset pada available-invoice.py.
+
+ -- Owo Sugiana <sugiana@opensipkd.com> 16 Nov 2015
+
+opensipkd-pbb (0.6.5); urgency=high
+
+  * BSB membutuhkan field tgl_pembayaran_sppt diisi dengan transaction date
+    (bit 13) + transaction time (bit 12) agar rekonsiliasi sesuai. Telah
+    diperbaiki di module depok dan cikarang.
+
+ -- Owo Sugiana <sugiana@opensipkd.com> 20 Okt 2015
+
+opensipkd-pbb (0.6.4); urgency=high
+
+  * ATM BSB membutuhkan bit 7 dan 12 bernilai sama antara inquiry request dan
+    response.
+
+ -- Owo Sugiana <sugiana@opensipkd.com> 18 Sep 2015
+
+opensipkd-pbb (0.6.3); urgency=medium
+
+  * Modul cikarang yang digunakan Kabupaten Bogor kini punya konfigurasi
+    apakah akan UPDATE tabel sppt untuk field status_pembayaran_sppt. Karena
+    di Kabupaten Bogor sudah dilakukan oleh trigger di tabel pembayaran_sppt.
+
+ -- Owo Sugiana <sugiana@opensipkd.com> 8 Aug 2015
+
+opensipkd-pbb (0.6.2); urgency=high
+
+  * Field tgl_rekam_byr_sppt pada tabel pembayaran_sppt kini mengandung jam.
+
+ -- Owo Sugiana <sugiana@opensipkd.com> 30 Jul 2015
+
+opensipkd-pbb (0.6.1-1); urgency=low
+
+  * Bug fixed pada tampilan log saat payment dimana seharusnya tidak ada
+    "Encode MTI 0200".
+  * Contoh konfigurasi untuk Kabupaten Bogor.
+
+ -- Owo Sugiana <sugiana@opensipkd.com> 29 Jul 2015
+
+opensipkd-pbb (0.6.1); urgency=medium
+
+  * Bug fixed saat terjadi kesalahan yang tidak dipahami dimana tadinya tidak
+    menyampaikan bit 39.
+  * Modul cimahi memungkinkan database schema diatur di konfigurasi untuk
+    memudahkan fase development.
+
+ -- Owo Sugiana <sugiana@opensipkd.com> 23 Jun 2015
+
+opensipkd-pbb (0.6-11); urgency=low
+
+  * Penambahan identitas tempat pembayaran untuk PT POS pada contoh
+    konfigurasi Kabupaten Bekasi (Cikarang). 
+
+ -- Owo Sugiana <sugiana@opensipkd.com> 9 Mei 2015
+
+opensipkd-pbb (0.6-10); urgency=low
+
+  * Penambahan contoh konfigurasi untuk Kabupaten Tasikmalaya.
+
+ -- Owo Sugiana <sugiana@opensipkd.com> 21 Apr 2015
+
+opensipkd-pbb (0.6-9); urgency=low
+
+  * Penambahan modul cimahi.
+
+ -- Owo Sugiana <sugiana@opensipkd.com> 1 Apr 2015
+
+opensipkd-pbb (0.6-8); urgency=low
+
+  * Penempatan ack_settlement_date() yang lebih baik.
+
+ -- Owo Sugiana <sugiana@opensipkd.com> 24 Mar 2015
+
+opensipkd-pbb (0.6-7); urgency=high
+
+  * Bug fixed saat BRI mengisi bit 107 dengan Administrator9999. Memastikan
+    semuat tipe LL berukuran 99 dan LLL berukuran 999.
+  # Bug fixed saat test_inquiry menggunakan opsi --raw.
+
+ -- Owo Sugiana <sugiana@opensipkd.com> 23 Mar 2015
+
+opensipkd-pbb (0.6-6); urgency=low
+
+  * Contoh konfigurasi bjb diganti menjadi bjb_with_suffix.
+  * Hapus log yang tak perlu saat reversal pada penggunaan getRawIso().
+
+ -- Owo Sugiana <sugiana@opensipkd.com> 20 Mar 2015
+
+opensipkd-pbb (0.6-5); urgency=medium
+
+  * Konfigurasi untuk Tangerang Selatan.
+
+ -- Owo Sugiana <sugiana@opensipkd.com> 13 Mar 2015
+
+opensipkd-pbb (0.6-4); urgency=medium
+
+  * Konfigurasi untuk Subang.
+  * Penggunaan function argument pool_size dan max_overflow pada
+    create_engine().
+
+ -- Owo Sugiana <sugiana@opensipkd.com> 12 Mar 2015
+
+opensipkd-pbb (0.6-3); urgency=high
+
+  * Bug fixed pada perhitungan denda.
+
+ -- Owo Sugiana <sugiana@opensipkd.com> 28 Peb 2015
+
+opensipkd-pbb (0.6-2); urgency=medium
+
+  * Available invoice untuk modul cikarang.
+  * Contoh konfigurasi untuk Kota Sungai Liat, Kabupaten Bangka Belitung
+    (babel.py).
+
+ -- Owo Sugiana <sugiana@opensipkd.com> 23 Peb 2015
+
+opensipkd-pbb (0.6-1); urgency=medium
+
+  * Penambahan modul serang.
+  * Penambahan modul plara (Pelabuhan Ratu alias Kabupaten Sukabumi).
+
+ -- Owo Sugiana <sugiana@opensipkd.com> 10 Peb 2015
+
+opensipkd-pbb (0.6); urgency=medium
+
+  * Perubahan beberapa modul agar tidak berbenturan saat digunakan oleh paket
+    opensipkd-switch.
+
+ -- Owo Sugiana <sugiana@opensipkd.com> 18 Jan 2015
+
+opensipkd-pbb (0.5.1); urgency=medium
+
+  * Penambahan modul cikarang.
+
+ -- Owo Sugiana <sugiana@opensipkd.com> 19 Nov 2014
+
+opensipkd-pbb (0.5); urgency=high
+
+  * Perubahan nama paket dari pbb menjadi opensipkd-pbb untuk memudahkan
+    pelacakan.
+  * Raw stream management yang dapat menyambung string dari beberapa request. 
+  * Menerapkan konsep modul wilayah.
+  * Setiap bank punya file log sendiri.
+  * Menghilangkan ketergantungan pada paket python-elixir.
+
+ -- Owo Sugiana <sugiana@opensipkd.com> 31 Okt 2014
+
+pbb (0.4.10); urgency=high
+
+  * Bug FIXED saat SPPT sudah dibayar pada pbb_upper.py fungsi sppt2payment().
+
+ -- Owo Sugiana <sugiana@opensipkd.com> 2 Apr 2014
+
+pbb (0.4.9); urgency=high
+
+  * Opsi untuk tabel yang field-nya ditulis dengan huruf besar.
+
+ -- Owo Sugiana <sugiana@gmail.com> 24 Jan 2014
+
+pbb (0.4.8); urgency=high
+
+  * Antisipasi kegagalan pada hitung_denda(): 
+    unsupported operand type(s) for *: 'float' and 'Decimal'
+    dimana terjadi saat field bertipe numeric.
+
+ -- Owo Sugiana <sugiana@gmail.com> 8 Jan 2014
+  
+pbb (0.4.7); urgency=high
+
+  * Luas bumi dan bangunan dibulatkan.
+  * Penyesuaian tipe datetime (Oracle) dan date (PostgreSQL).
+
+ -- Owo Sugiana <sugiana@gmail.com> 31 Dec 2013
+
+pbb (0.4.6); urgency=high
+
+  * Penambahan option echo pada config.py untuk pilihan apakah perlu mengirim
+    echo test atau tidak saat timeout.
+  * Bit 7 belum disertakan saat network response. FIXED.
+
+ -- Owo Sugiana <sugiana@gmail.com> 29 Oct 2013
+
+pbb (0.4.5); urgency=low
+
+  * Penambahan btn.py (network module).
+  * Memaksimalkan kapasitas bit 61 dan 102. Hasil dari uji coba dengan BTN.
+  * Membaca bit 61 selalu di-trim, antisipasi BTN yang melebihkannya dengan
+    spasi.
+
+ -- Owo Sugiana <sugiana@gmail.com> 8 Oct 2013
+
+pbb (0.4.4); urgency=medium
+
+  * Tanggal transaksi kini mengambil dari bit 13, tidak lagi dari bit 15.
+
+ -- Owo Sugiana <sugiana@gmail.com> 23 Sep 2013
+
+pbb (0.4.3); urgency=medium
+
+  * Looping tak berakhir saat BRI tidak kunjung menjawab echo request.
+    Perbaikan pada close_connection(). FIXED.
+  * Saat --stop-thread=bjb ternyata bri ikut closed. FIXED.
+
+ -- Owo Sugiana <sugiana@gmail.com> 18 Sep 2013
+
+pbb (0.4.2); urgency=medium
+
+  * Koneksi BRI sering timeout, disebabkan oleh nilai default
+    socket_timeout_seconds lebih kecil ketimbang timeout_need_echo. Seharusnya
+    lebih besar. Oleh karena itu kini socket_timeout_seconds merupakan
+    pertambahan nilai dari timeout_need_echo.
+    
+ -- Owo Sugiana <sugiana@gmail.com> 14 Sep 2013 
+
+pbb (0.4.1); urgency=medium
+
+  * Saat RC 76 state dianggap sign off, menyebabkan transaksi berikutnya tidak
+    dapat dilakukan karena dianggap belum sign on. Solusinya error_link()
+    tidak perlu menyatakan sign off.
+
+ -- Owo Sugiana <sugiana@gmail.com> 26 Ags 2013
+
+pbb (0.4); urgency=high
+
+  * Socket timeout kini tidak lagi menggunakan konfigurasi timeout_seconds,
+    melainkan khusus di socket_timeout_seconds.
+  * Dukungan terhadap multi raw per request.
+
+ -- Owo Sugiana <sugiana@gmail.com> 18 Ags 2013
+
+pbb (0.3.21); urgency=low
+
+  * Command line argument stop kini diganti dengan yang lebih baku, yaitu
+    --stop. Untuk melihat lainnya menggunakan --help.
+  * Saat ada gangguan network di salah satu bank selama ini diatasi dengan
+    restart daemon, padahal cukup close thread-nya saja agar bank lainnya
+    tidak terganggu. Kini tersedia option --stop-thread=nama-bank.
+
+ -- Owo Sugiana <sugiana@gmail.com> 25 Jul 2013
+
+pbb (0.3.20); urgency=high
+
+  * Memungkinkan daemon ini hanya sebagai forwarder transaksi.
+
+ -- Owo Sugiana <sugiana@gmail.com> 5 Jul 2013
+
+pbb (0.3.19); urgency=high
+
+  * Saat terjadi fatal error seperti loss connection ke database menyebabkan
+    tidak adanya response. Ini membingungkan pihak bank. Jadi perlu response
+    dengan kode 91.
+  * Bila tagihan nol atau negatif maka dianggap lunas.
+  * Penggunaan tabel dat_objek_pajak diatur di config.py.
+
+ -- Owo Sugiana <sugiana@gmail.com> 20 Jun 2013
+
+pbb (0.3.18); urgency=low
+
+  * Nama jalan objek pajak diambil dari tabel dat_objek_pajak. Kalau tidak ada
+    diambil dari tabel sppt.
+    
+ -- Owo Sugiana <sugiana@gmail.com> 23 Mei 2013
+  
+pbb (0.3.17); urgency=high
+
+  * Bug FIXED pada sppt2amount() agar denda tidak ganda.
+
+ -- Owo Sugiana <sugiana@gmail.com> 23 Apr 2013
+
+pbb (0.3.16); urgency=high
+
+  * Saat terjadi network timeout yang terus-menerus, daemon masih berusaha
+    menerima data.  Seharusnya akhiri thread saja. FIXED.
+
+ -- Owo Sugiana <sugiana@gmail.com> 12 Apr 2013
+
+pbb (0.3.15); urgency=high
+
+  * Perubahan rumus total tagihan.
+
+ -- Owo Sugiana <sugiana@gmail.com> 1 Apr 2013
+
+pbb (0.3.14); urgency=high
+
+  * Bila sign on request belum mendapat response maka perlu diulang lagi
+    secara periodik.
+  * Menyertakan conf pada test script.
+
+ -- Owo Sugiana <sugiana@gmail.com> 25 Mar 2013
+
+pbb (0.3.13); urgency=medium
+
+  * Bila user bukan pemilik tabel maka akan tampil pesan kesalahan "tabel
+    tidak ada" pada Oracle. Ini karena Oracle menganggap user adalah schema.
+    Oleh karena itu pada file konfigurasi diperkenankan menetapkan schema-nya.
+
+ -- Owo Sugiana <sugiana@gmail.com> 21 Mar 2013
+
+pbb (0.3.12); urgency=low
+
+  * Bila sebagai client, perlu juga event saat disconnected untuk mengabari
+    admin servernya (baca: BJB).
+
+ -- Owo Sugiana <sugiana@gmail.com> 15 Mar 2013
+
+pbb (0.3.11); urgency=high
+
+  * Di Cikarang tabel pembayaran_sppt tidak memiliki field kd_bank_tunggal dan
+    kd_bank_persepsi.
+
+ -- Owo Sugiana <sugiana@gmail.com> 13 Mar 2013
+
+pbb (0.3.10); urgency=high
+
+  * Bug saat mengisi tabel pembayaran_sppt field jml_sppt_yg_dibayar dimana
+    denda belum disertakan.
+
+ -- Owo Sugiana <sugiana@gmail.com> 5 Mar 2013
+
+pbb (0.3.9); urgency=high
+
+  * Field payment.channel membedakan field pembayaran_sppt.kd_tp.
+
+ -- Owo Sugiana <sugiana@gmail.com> 15 Peb 2013
+
+pbb (0.3.8); urgency=high
+
+  * Nama jalan objek pajak diambil dari SPPT.
+  * Memungkinkan mapping field karena beberapa lokasi nama field-nya beda.
+
+ -- Owo Sugiana <sugiana@gmail.com> 4 Peb 2013
+
+pbb (0.3.7); urgency=high
+
+  * Perlu pencatatan identitas bank saat payment.
+
+ -- Owo Sugiana <sugiana@gmail.com> 23 Jan 2013
+
+pbb (0.3.6); urgency=low
+
+  * Saat koneksi yang dibuat oleh remote client down, sistem akan mengirim
+    email. Ini dibutuhkan BRI yang belum memiliki auto connect.
+
+ -- Owo Sugiana <sugiana@gmail.com> 22 Jan 2013
+
+pbb (0.3.5); urgency=high
+
+  * Saat sebagai server, echo juga dikirim ke client bila timeout.
+
+ -- Owo Sugiana <sugiana@gmail.com> 17 Jan 2013
+
+pbb (0.3.4); urgency=high
+
+  * set_transaction_response() kini menyalin bit 7 juga.
+  * BUG FIXED terkait dengan pengolahan raw string yang diterima, dimana saat
+    ada kesalahan tak terduga sistem masih mencoba menganalisa berbagai
+    status. Ini menyebabkan ia tidak melakukan receive network request. Kini
+    sign off disampaikan dan thread diakhiri.
+    
+ -- Owo Sugiana <sugiana@gmail.com> 15 Jan 2013
+  
+pbb (0.3.3); urgency=low
+
+  * Penggunaan tabel pembatalan_sppt diganti dengan tabel reversal.
+  * BJB pernah mengirim spasi pasca karakter hexa 3. FIXED.
+  * Penghapusan atribut BPHTB karena sudah ditempatk di paket terpisah bernama
+    bphtb.
+
+ -- Owo Sugiana <sugiana@gmail.com> 3 Jan 2013
+
+pbb (0.3.2); urgency=low
+
+  * Transaksi yang tidak didahului Sign On menyebabkan Error Link. Kini
+    ditampilkan di log penyebab Error Link tersebut.
+  * Antisipasi saat Settlement Date error.
+  * BRI butuh network header-nya disematkan saat response.
+  * Bit 62 diperbesar kapasitasnya dari 3+263 menjadi 3+996, karena BJB
+    mengirim sebesar 274.
+  * Penambahan network header untuk BJB BPHTB.
+  * Antisipasi bit 39 tidak ada, untuk BJB BPHTB.
+
+ -- Owo Sugiana <sugiana@gmail.com> 26 Des 2012
+
+pbb (0.3.1); urgency=high
+
+  * Bit 11 (STAN) disalin dari request (saran BRI).
+  * Bit 4 (Amount Transaction) diisi saat inquiry, tidak lagi disalin dari
+    request (saran BRI).
+  * Bug FIXED pada BRI encode().
+
+ -- Owo Sugiana <sugiana@gmail.com> 18 Des 2012
+
+pbb (0.3); urgency=high
+
+  * Kini tidak hanya untuk PBB, melainkan bisa untuk Pajak Self Assesment,
+    BPHTB, dan reklame.
+
+ -- Owo Sugiana <sugiana@gmail.com> 7 Des 2012
+
+pbb (0.2.4); urgency=medium
+
+  * Konfigurasi dilengkapi dengan custom encode/decode network raw.
+
+ -- Owo Sugiana <sugiana@gmail.com> 2 Des 2012
+
+pbb (0.2.3); urgency=high
+
+  * Field iso_request diperbesar menjadi 1024 karakter.
+
+ -- Owo Sugiana <sugiana@gmail.com> 17 Nov 2012
+
+pbb (0.2.2); urgency=medium
+
+  * Bit 62 hanya boleh diisi saat bit 39 = '00'.
+  * Bit 4 hanya boleh diisi BJB.
+  * Perbaikan pada reversal.
+  * Unit test dengan teknik offline. 
+
+ -- Owo Sugiana <sugiana@gmail.com> 14 Nov 2012
+
+pbb (0.2.1); urgency=medium
+
+  * Raw string di-upper.
+  * Saat reversal bit 47 diperiksa keberadaannya. Terkadang BJB tidak
+    mengirimnya.
+
+ -- Owo Sugiana <sugiana@gmail.com> 8 Nov 2012
+
+pbb (0.2); urgency=medium
+
+  * Redefine bit sesuai ISO Spesification Pajak Daerah - BJB Ver 1.6.
+  * Daemon bisa sebagai network client.
+  * BPHTB juga disertakan
+
+ -- Owo Sugiana <sugiana@gmail.com> 4 Okt 2012
+
+pbb (0.1.2); urgency=high
+
+  * Penyesuaian bit 70
+
+ -- Owo Sugiana <sugiana@gmail.com> 2 Okt 2012
+
+pbb (0.1.1); urgency=high
+
+  * NOP ditambah dengan tahun tagihan
+
+ -- Owo Sugiana <sugiana@gmail.com> 2 Agu 2012
+  
+pbb (0.1); urgency=high
+
+  * PBB ISO8583 Server Pajak
+
+ -- Owo Sugiana <sugiana@gmail.com> 30 Jul 2012

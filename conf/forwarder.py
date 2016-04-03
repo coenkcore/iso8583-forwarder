@@ -2,7 +2,7 @@ iso8583_listen_address = ('0.0.0.0', 8586)
 
 # Nama modul sesuai file atau direktori yang berada di
 # /usr/share/opensipkd-forwarder/modules.
-module_name = 'bca'
+module_name = 'multi'
 db_url      = 'postgresql://aagusti:a@localhost/forwarder'
 host = {
     'bjb': {
