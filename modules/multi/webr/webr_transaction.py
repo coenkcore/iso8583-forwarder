@@ -135,7 +135,7 @@ class WebrDbTransaction():
         # pay.hitung_bunga
         #pay.sspdjam = self.tgl_bayar.time()
         WebrDBSession.add(pay)
-        #self.calc.set_paid()
+        self.calc.set_paid()
         WebrDBSession.flush()
         return pay, ke
 

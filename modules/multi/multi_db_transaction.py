@@ -260,7 +260,6 @@ class MultiDbTransaction(Transaction):
             return self.ack_create_payment_failed()
             
         DBSession.add(payment)
-        #inv.set_paid()
         inv.commit()
         self.commit()
         self.setBit(47, str(payment.id))
