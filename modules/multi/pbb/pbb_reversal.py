@@ -6,7 +6,7 @@ from CalculateInvoice import (
 from DbTools import query_pembayaran
 
 from pbb_structure import INVOICE_ID, INVOICE_PROFILE
-sys.path[0:0] = ['/usr/share/opensipkd-forwarder/modules/bca/']
+sys.path[0:0] = ['/usr/share/opensipkd-forwarder/modules/multi/']
 from pbb import PbbDbSession
 
 sys.path[0:0] = ['/usr/share/opensipkd/modules']

@@ -9,12 +9,12 @@ from datetime import datetime
 from types import DictType
 
 sys.path[0:0] = ['/etc/opensipkd']
-from bca_conf import (
+from multi_conf import (
     #host,
     is_update_sppt,
     nip_rekam_byr_sppt,
     )
-sys.path[0:0] = ['/usr/share/opensipkd-forwarder/modules/bca/']
+sys.path[0:0] = ['/usr/share/opensipkd-forwarder/modules/multi/']
 from pbb import PbbDbSession
 from log_models import MyFixLength
 

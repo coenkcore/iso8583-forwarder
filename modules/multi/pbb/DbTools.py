@@ -1,5 +1,5 @@
 import sys
-sys.path[0:0] = ['/usr/share/opensipkd-forwarder/modules/bca/']
+sys.path[0:0] = ['/usr/share/opensipkd-forwarder/modules/multi/']
 from pbb import PbbDbSession
 from pbb.models import Pembayaran
 

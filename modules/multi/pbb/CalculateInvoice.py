@@ -1,5 +1,5 @@
 import sys
-sys.path[0:0] = ['/usr/share/opensipkd/modules/bca/']
+sys.path[0:0] = ['/usr/share/opensipkd/modules/multi/']
 from pbb import PbbDbSession
 from datetime import (
     datetime,
@@ -12,7 +12,7 @@ from models import (
     )
 sys.path[0:0] = ['/etc/opensipkd']
 
-from bca_conf import persen_denda
+from multi_conf import persen_denda
 
 def query_sppt(propinsi, kabupaten, kecamatan, kelurahan, blok, urut,
         jenis, tahun):

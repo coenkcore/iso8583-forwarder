@@ -3,13 +3,13 @@ sys.path.insert(0, '/usr/share/opensipkd/modules')
 from base_models import (
     CommonModel,
     )
-sys.path.insert(0, '/usr/share/opensipkd-forwarder/modules/bca')
+sys.path.insert(0, '/usr/share/opensipkd-forwarder/modules/multi')
 from pbb import (
     PbbBase,
     )
     
 sys.path.insert(0, '/etc/opensipkd')
-from bca_conf import pbb_db_schema
+from multi_conf import pbb_db_schema
 
 
 class Invoice(PbbBase, CommonModel):

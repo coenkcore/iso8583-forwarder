@@ -33,18 +33,20 @@ from multi_structure import (
     ERR_INVOICE_OPEN,
     ERR_SETTLEMENT_DATE,
     )
-#sys.path[0:0] = ['/usr/share/opensipkd-forwarder/modules/multi/pbb']
-from pbb.pbb_db_transaction import PbbDbTransaction
-from pbb.pbb_reversal import PbbReversal
-#sys.path[0:0] = ['/usr/share/opensipkd-forwarder/modules/bca/bphtb']
-from bphtb.bphtb_fix_db_transaction import BphtbDbTransaction
-from bphtb.bphtb_reversal import BphtbReversal
+if pbb_db_url:
+    from pbb.pbb_db_transaction import PbbDbTransaction
+    from pbb.pbb_reversal import PbbReversal
+if bphtb_db_url:
+    from bphtb.bphtb_fix_db_transaction import BphtbDbTransaction
+    from bphtb.bphtb_reversal import BphtbReversal
 
-from padl.padl_transaction import PadlDbTransaction
-from padl.padl_reversal import PadlReversal
+if padl_db_url:
+    from padl.padl_transaction import PadlDbTransaction
+    from padl.padl_reversal import PadlReversal
 
-from webr.webr_transaction import WebrDbTransaction
-from webr.webr_reversal import WebrReversal
+if webr_db_url:
+    from webr.webr_transaction import WebrDbTransaction
+    from webr.webr_reversal import WebrReversal
 
 from log_models import (
 #    INQUIRY_SEQ,

@@ -8,7 +8,7 @@ from sqlalchemy.orm import (
 sys.path[0:0] = ['/usr/share/opensipkd/modules']
 from base_models import Base
 sys.path[0:0] = ['/etc/opensipkd']
-from bca_conf import (
+from multi_conf import (
     pbb_db_url,
     db_pool_size,
     db_max_overflow,
