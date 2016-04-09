@@ -18,7 +18,7 @@ bphtb_db_schema = 'bphtb'
 padl_db_url = '' #'postgresql://aagusti:a@localhost/padl_bgr'
 padl_db_schema = 'padl'
 
-webr_db_url    = 'postgresql://aagusti:a@localhost/web_r'
+webr_db_url    = 'postgresql://web-r:bandung@192.168.99.23/web_r'
 webr_db_schema = 'public'
 # Tuning
 # http://docs.sqlalchemy.org/en/rel_0_9/core/pooling.html

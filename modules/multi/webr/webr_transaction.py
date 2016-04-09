@@ -66,6 +66,13 @@ class WebrDbTransaction():
             # nama_.append(nama)
             
         # nama_lengkap = '/'.join(nama_)
+        if self.calc.invoice.periode_1:
+            masa_pajak = self.calc.invoice.periode_1.strftime('%d-%m-%Y')
+        
+        if self.calc.invoice.periode_2:
+            masa_pajak = " s.d ".join([masa_pajak, 
+                self.calc.invoice.periode_1.strftime('%d-%m-%Y')])
+
         self.invoice_profile.from_dict({
             'npwpd': self.calc.invoice.op_kode,
             'nama': self.calc.invoice.op_nama,
@@ -78,9 +85,8 @@ class WebrDbTransaction():
             'nama_pajak': self.calc.invoice.rek_nama,
             'kode_skpd': self.calc.invoice.rek_kode,
             'nama_skpd': self.calc.invoice.rek_nama,
-            'masa_pajak': " s.d ".join([self.calc.invoice.periode_1.strftime('%d-%m-%Y'),
-                                  self.calc.invoice.periode_2.strftime('%d-%m-%Y')]),
-            #'jth_tempo': self.calc.invoice.jatuhtempotgl.strftime('%Y%m%d'),
+            'masa_pajak': "Periode    : %s " % masa_pajak,
+            'jth_tempo':  "Jatuh Tempo: %s " % self.calc.invoice.jatuh_tempo.strftime('%d-%m-%Y'),
             })
         
     def commit(self):

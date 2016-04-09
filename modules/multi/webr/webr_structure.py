@@ -22,7 +22,7 @@ INVOICE_ID = [
 # Bit 62 #
 ##########
 INVOICE_PROFILE = [
-    ('npwpd', 22,'ANS'),
+    ('npwpd', 16,'ANS'),
     ('nama', 35,'ANS'),
     ('alamat', 40,'ANS'),
     ('alamat2', 40,'ANS'),
@@ -33,6 +33,6 @@ INVOICE_PROFILE = [
     ('nama_pajak', 40,'ANS'),
     ('kode_skpd', 20,'ANS'),
     ('nama_skpd',40,'ANS'),
-    ('jth_tempo', 8 ,'N'),
-    ('masa_pajak', 25 ,'ANS'),
+    ('jth_tempo', 40 ,'ANS'),
+    ('masa_pajak', 40 ,'ANS'),
 ]

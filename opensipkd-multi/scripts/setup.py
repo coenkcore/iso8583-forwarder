@@ -12,7 +12,7 @@ data_file = os.path.join(data_dir, 'data.py')
 data_module = imp.load_source('data', data_file)
 data = data_module.data
 
-
+print db_url
 def init():
     if not db_url:
         print('Sesuaikan db_url pada /etc/opensipkd/multi_conf.py')
@@ -29,4 +29,5 @@ def init():
         Reversal,
         )
     Base.metadata.create_all()
-    #nsert(engine, data)
+    #insert(engine, data)
+init()
