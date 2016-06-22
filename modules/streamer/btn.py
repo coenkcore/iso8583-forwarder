@@ -1,9 +1,10 @@
 from tcp import Streamer as BaseStreamer
 
 # 4 byte pertama adalah raw length
-# Dalam 1 request bisa saja ada 2 transaksi, bahkan
-# bisa saja string transaksi yang belum lengkap
 class Streamer(BaseStreamer):
+    def get_size(self, raw):
+        return int(raw[:4])
+
     # Override Stremer.get
     def get(self, raw):
         if self.size:
@@ -13,7 +14,7 @@ class Streamer(BaseStreamer):
             if len(raw) < 4:
                 self.raw = raw
                 return
-            size = self.size = int(raw[:4])
+            size = self.size = self.get_size(raw)
             self.raw = ''
             raw = raw[4:]
         self.raw += raw[:size]

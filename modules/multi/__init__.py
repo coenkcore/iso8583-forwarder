@@ -1,31 +1,13 @@
-import sys
-sys.path[0:0] = ['/etc/opensipkd']
-#from bca_conf import module_names, db_url
+import network
+from conf import module_name
 
-from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import (
-    scoped_session,
-    sessionmaker,
-    )
 
-    
-sys.path[0:0] = ['/usr/share/opensipkd/modules']
-from base_models import Base, DBSession
+name = 'multi.' + module_name
+print('Module: ' + name)
+module = __import__(name)
+sub_module = getattr(module, module_name)
+DbTransaction = sub_module.DbTransaction
 
-sys.path[0:0] = ['/etc/opensipkd']
-from multi_conf import (
-    db_url,
-    db_pool_size,
-    db_max_overflow,
-    )
-
-engine = create_engine(db_url, pool_size=db_pool_size,
-            max_overflow=db_max_overflow)
-            
-Base.metadata.bind = engine
-
-sys.path[0:0] = ['/usr/share/opensipkd-forwarder/modules/multi']
-module_name = 'multi_db_transaction'
-module = __import__(module_name)
-DbTransaction = module.MultiDbTransaction
+class Job(network.Job):
+    def get_iso_class(self):
+        return DbTransaction

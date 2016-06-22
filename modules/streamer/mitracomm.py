@@ -1,9 +1,12 @@
 from tcp import Streamer as BaseStreamer
 
-# 4 byte pertama adalah raw length
+# 2 byte pertama size
 class Streamer(BaseStreamer):
     def get_size(self, raw):
-        return int(raw[:4])
+        a, b = raw
+        a = ord(a) * 256
+        b = ord(b)
+        return a + b
 
     # Override Stremer.get
     def get(self, raw):
@@ -11,12 +14,12 @@ class Streamer(BaseStreamer):
             size = self.size - len(self.raw)
         else:
             raw = self.raw + raw
-            if len(raw) < 4:
+            if len(raw) < 2:
                 self.raw = raw
                 return
-            size = self.size = self.get_size(raw)
+            size = self.size = self.get_size(raw[:2])
             self.raw = ''
-            raw = raw[4:]
+            raw = raw[2:]
         self.raw += raw[:size]
         if len(self.raw) == self.size:
             raw_iso = self.raw
@@ -27,5 +30,8 @@ class Streamer(BaseStreamer):
 
     # Override Stremer.set
     def set(self, raw):
-        size = str(len(raw)).zfill(4)
-        return size + raw
+        size = len(raw)
+        a = size / 256
+        b = size % 256
+        header = chr(a) + chr(b)
+        return header + raw

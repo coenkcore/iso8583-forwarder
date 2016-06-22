@@ -6,9 +6,9 @@ from tcp import Streamer as BaseStreamer
 class Streamer(BaseStreamer):
     def get_size(self, raw):
         a, b = raw
-        b = ord(b) * 256
         a = ord(a)
-        return b + a
+        b = ord(b) * 256
+        return a + b
 
     # Override Stremer.get
     def get(self, raw):
@@ -32,10 +32,8 @@ class Streamer(BaseStreamer):
 
     # Override Stremer.set
     def set(self, raw):
-        raw = raw.upper()
-        raw = str(raw) # Jangan sampai unicode
         size = len(raw)
-        b = size / 256
         a = size % 256
+        b = size / 256
         header = chr(a) + chr(b)
         return header + raw
