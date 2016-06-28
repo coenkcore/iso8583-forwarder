@@ -1,6 +1,7 @@
 from ..transaction import Transaction
 import pbb
 import bphtb
+import padl
 
 
 class DbTransaction(Transaction):
@@ -29,5 +30,19 @@ class DbTransaction(Transaction):
     def bphtb_payment_request_handler(self):
         try:
             bphtb.payment(self)
+        except:
+            self.ack_unknown()
+
+    # Override
+    def padl_inquiry_request_handler(self):
+        try:
+            padl.inquiry(self)
+        except:
+            self.ack_unknown()
+
+    # Override
+    def padl_payment_request_handler(self):
+        try:
+            padl.payment(self)
         except:
             self.ack_unknown()

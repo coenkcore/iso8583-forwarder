@@ -1,7 +1,7 @@
 ISO8583 Forwarder
 =================
 ISO8583 adalah format transaksi perbankan. Aplikasi ini merupakan `daemon`-nya
-dengan fitur::
+dengan fitur:
 
 - Multi client, dapat membuka koneksi ke beberapa server.
 - Multi server, dapat listen di beberapa port.
@@ -36,10 +36,11 @@ seperti PBB dan BPHTB. Ia memiliki konfigurasi utama pada
 
     module_name = 'BogorKota'
 
-Konfigurasi selanjutnya berada di::
+Konfigurasi selanjutnya berada di:
 
 - modules/multi/BogorKota/pbb/conf.py
 - modules/multi/BogorKota/bphtb/conf.py
+- modules/multi/BogorKota/padl/conf.py
 
 Sesuaikanlah.
 
@@ -48,7 +49,7 @@ Pengujian
 Sebelum daemon dijalankan sebaiknya dicoba terlebih dahulu. Dapatkanlah tagihan
 yang belum dibayar::
 
-    python available-invoice multi -m pbb
+    python available-invoice multi pbb
 
 Kemudian lakukan inquiry (cek tagihan)::
 

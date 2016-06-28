@@ -7,6 +7,6 @@ from conf import (
 
 
 class AvailableInvoice(SismiopAvailableInvoice):
-    def __init__(self, sample_count):
-        SismiopAvailableInvoice.__init__(self, db_url, db_schema, sample_count,
+    def __init__(self):
+        SismiopAvailableInvoice.__init__(self, db_url, db_schema,
             persen_denda=persen_denda)

@@ -71,12 +71,39 @@ class Inquiry(object):
             'Luas Tanah': int(inv.luas_bumi_sppt),
             'Luas Bangunan': int(inv.luas_bng_sppt),
             'Lokasi': inv.jln_wp_sppt})
+        self.set_invoice_profile_to_parent()
+
+    def set_invoice_profile_to_parent(self):
         self.parent.set_invoice_profile(self.invoice_profile.get_raw())
 
-    def response(self):
+    def is_valid(self, is_need_invoice_profile=True):
         if not self.calc.invoice:
+            is_need_invoice_profile and self.set_invoice_profile_to_parent()
             return self.parent.ack_not_available()
-        self.set_invoice_profile()
+        is_need_invoice_profile and self.set_invoice_profile()
+        if self.calc.paid:
+            return self.ack_already_paid()
+        if self.calc.total <= 0:
+            return self.parent.ack_already_paid_2()
+        return True
+
+    def ack_already_paid(self):
+        module_conf = host[self.parent.conf['name']]
+        self.parent.conf.update(module_conf)
+        pay = self.calc.invoice2payment()
+        if pay and pay.kd_kanwil_bank == self.parent.conf['kd_kanwil'] and \
+            pay.kd_kppbb_bank == self.parent.conf['kd_kantor'] and \
+            pay.kd_tp == self.parent.conf['kd_tp']:
+            ntp = pay.id
+        else:
+            ntp = ''
+        self.parent.set_ntp(ntp)
+        return self.parent.ack_already_paid()
+
+    def response(self):
+        if not self.is_valid():
+            return self.parent.set_amount(0)
+        self.parent.set_amount(self.calc.total)
         query.create_inquiry(self.calc, self.parent.from_iso, persen_denda)
         self.commit()
 
@@ -142,17 +169,6 @@ class Payment(Inquiry):
         return self.calc.create_payment(inq,
                 self.parent.from_iso.get_transaction_date(), bank_fields,
                 nip_rekam_byr_sppt)
-
-    def ack_already_paid(self):
-        pay = self.calc.invoice2payment()
-        if pay and pay.kd_kanwil_bank == self.parent.conf['kd_kanwil'] and \
-            pay.kd_kppbb_bank == self.parent.conf['kd_kantor'] and \
-            pay.kd_tp == self.parent.conf['kd_tp']:
-            ntp = pay.id
-        else:
-            ntp = ''
-        self.parent.set_ntp(ntp)
-        return self.parent.ack_already_paid()
 
 
 def inquiry(parent):

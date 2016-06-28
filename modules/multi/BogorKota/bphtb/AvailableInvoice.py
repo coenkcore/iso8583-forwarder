@@ -25,18 +25,14 @@ query = Query(models, DBSession)
 
 
 class AvailableInvoice(object):
-    def __init__(self, sample_count=100, **kwargs):
-        self.sample_count = sample_count
-        self.persen_denda = 'persen_denda' in kwargs and \
-            kwargs['persen_denda'] or 0
-
-    def show(self):
+    def show(self, option):
+        sample_count = int(option.sample_count)
         q = DBSession.query(models.Invoice).filter_by(status_pembayaran=0)
         q = q.order_by(models.Invoice.id.desc())
         offset = -1
         count = 0
         while True:
-            if count >= self.sample_count:
+            if count >= sample_count:
                 break
             offset += 1
             row = q.offset(offset).first()
@@ -48,11 +44,11 @@ class AvailableInvoice(object):
             invoice_id['SSPD No'] = row.no_sspd
             invoice_id_raw = invoice_id.get_raw()
             calc = CalculateInvoice(models, DBSession, invoice_id_raw,
-                    self.persen_denda)
+                    persen_denda)
             if calc.total < 1:
                 continue
             count += 1
             msg = '#{no}/{count} {id} Rp {total}'.format(no=count,
                     id=invoice_id_raw, total=calc.total,
-                    count=self.sample_count)
+                    count=sample_count)
             print(msg)
