@@ -14,6 +14,7 @@ from query import (
     Query,
     CalculateInvoice,
     NTP,
+    Reversal,
     )
 from structure import INVOICE_ID
 from conf import (
@@ -35,6 +36,21 @@ DBSession = scoped_session(session_factory)
 DBSession.configure(bind=engine)
 models = Models(Base, db_schema)
 query = Query(models, DBSession)
+
+
+class BaseResponse(object):
+    def __init__(self, parent):
+        self.parent = parent
+        self.invoice_id_raw = parent.from_iso.get_invoice_id()
+
+    def is_transaction_owner(self, iso_pay):
+        conf = host[self.parent.conf['name']]
+        return iso_pay.bank_id == conf['id']
+
+    def commit(self):
+        DBSession.commit()
+        self.parent.ack()
+
 
 
 class Inquiry(object):
@@ -84,12 +100,14 @@ class Inquiry(object):
     def is_valid(self, is_need_invoice_profile=True):
         if not self.calc.invoice:
             is_need_invoice_profile and self.set_invoice_profile_to_parent()
+            if self.calc.invoice is False:
+                return self.parent.ack_invalid_number()
             return self.parent.ack_not_available()
         is_need_invoice_profile and self.set_invoice_profile()
         if self.calc.paid:
             return self.ack_already_paid()
         if self.calc.total <= 0:
-            return self.parent.ack_already_paid_2()
+            return self.parent.ack_already_paid_2(self.calc.total)
         return True
 
     def response(self):
@@ -245,7 +263,7 @@ class Payment(Inquiry):
         iso_pay.stan = from_iso.get_stan()
         iso_pay.ntb = from_iso.get_ntb()
         iso_pay.ntp = ntp
-        iso_pay.bank_id = self.parent.conf['id'] 
+        iso_pay.bank_id = self.parent.conf['id']
         iso_pay.channel_id = from_iso.get_channel()
         iso_pay.bank_ip = self.parent.get_bank_ip()
         DBSession.add(iso_pay)
@@ -259,3 +277,34 @@ class Payment(Inquiry):
 def payment(parent):
     pay = Payment(parent)
     pay.response()
+
+
+############
+# Reversal #
+############
+class ReversalResponse(BaseResponse):
+    def __init__(self, parent):
+        BaseResponse.__init__(self, parent)
+        self.rev = Reversal(models, DBSession, self.invoice_id_raw)
+
+    def response(self):
+        if not self.rev.invoice:
+            return self.parent.ack_payment_not_found()
+        if not self.rev.is_paid():
+            return self.parent.ack_invoice_open()
+        if not self.rev.payment:
+            return self.parent.ack_payment_not_found()
+        iso_pay = self.rev.get_iso_payment()
+        if not iso_pay:
+            return self.parent.ack_payment_not_found_2()
+        if not self.is_transaction_owner(iso_pay):
+            return self.parent.ack_payment_owner()
+        self.rev.set_unpaid()
+        self.commit()
+
+
+def reversal(parent):
+    rev = ReversalResponse(parent)
+    rev.response()
+
+

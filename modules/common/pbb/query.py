@@ -1,6 +1,9 @@
 from tools import DbTransactionID
 from sismiop.tools import sppt2nop
-from sismiop.query import Query as SismiopQuery
+from sismiop.query import (
+    Query as SismiopQuery,
+    Reversal as SismiopReversal,
+    )
 
 
 class NTP(DbTransactionID):
@@ -9,7 +12,31 @@ class NTP(DbTransactionID):
         return q.first()
 
 
-class Query(SismiopQuery):
+class Inquiry(SismiopQuery):
+    def invoice2inquiry(self, sppt):
+        q = self.DBSession.query(self.models.Inquiry).filter_by(propinsi=sppt.kd_propinsi,
+                kabupaten=sppt.kd_dati2, kecamatan=sppt.kd_kecamatan,
+                kelurahan=sppt.kd_kelurahan, blok=sppt.kd_blok,
+                urut=sppt.no_urut, jenis=sppt.kd_jns_op,
+                tahun=sppt.thn_pajak_sppt)
+        q = q.order_by(self.models.Inquiry.id.desc())
+        return q.first()
+
+    def invoice2payment(self, sppt):
+        q = self.DBSession.query(self.models.Payment).filter_by(propinsi=sppt.kd_propinsi,
+                kabupaten=sppt.kd_dati2, kecamatan=sppt.kd_kecamatan,
+                kelurahan=sppt.kd_kelurahan, blok=sppt.kd_blok,
+                urut=sppt.no_urut, jenis=sppt.kd_jns_op,
+                tahun=sppt.thn_pajak_sppt)
+        q = q.order_by(self.models.Payment.ke.desc())
+        return q.first()
+
+    def inq2bayar(self, inq):
+        q = self.query_pembayaran(inq.propinsi, inq.kabupaten, inq.kecamatan,
+                inq.kelurahan, inq.blok, inq.urut, inq.jenis, str(inq.tahun))
+        q = q.order_by(self.models.Pembayaran.pembayaran_sppt_ke.desc())
+        return q.first()
+
     def inquiry_id(self):
         return self.models.InquirySeq.next_value()
 
@@ -35,6 +62,8 @@ class Query(SismiopQuery):
         self.DBSession.flush()
         return inq
 
+
+class Payment(Inquiry):
     def create_payment(self, inq, total_bayar, urutan_bayar, prefix_ntp,
             bank_fields, from_iso):
         payment_id = self.create_ntp(prefix_ntp)
@@ -52,7 +81,7 @@ class Query(SismiopQuery):
         payment.channel = from_iso.get_channel()
         payment.ntb = from_iso.get_ntb()
         payment.iso_request = ISO8583.getRawIso(self.from_iso).upper()
-        return payment, bayar
+        return payment
 
     def create_ntp(self, prefix):
         generator = NTP(self.models, self.DBSession)
@@ -65,4 +94,19 @@ class Query(SismiopQuery):
                 blok=sppt.kd_blok, urut=sppt.no_urut, jenis=sppt.kd_jns_op,
                 tahun=sppt.thn_pajak_sppt)
         q = q.order_by(self.models.Inquiry.id.desc())
+        return q.first()
+
+
+class Reversal(SismiopReversal):
+    def get_iso_payment(self, invoice_id):
+        q = self.DBSession.query(self.models.Payment).filter_by(
+                propinsi=invoice_id['Propinsi'],
+                kabupaten=invoice_id['Kabupaten'],
+                kecamatan=invoice_id['Kecamatan'],
+                kelurahan=invoice_id['Kelurahan'],
+                blok=invoice_id['Blok'],
+                urut=invoice_id['Urut'],
+                jenis=invoice_id['Jenis'],
+                tahun=invoice_id['Tahun Pajak'])
+        q = q.order_by(self.models.Payment.ke.desc())
         return q.first()

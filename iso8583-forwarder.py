@@ -382,21 +382,6 @@ class ParserThread(Thread, BaseDaemon, Common):
 
     def run(self):
         iso = self.parent.job.iso_from_raw(self.raw)
-        #if from_iso.is_response():
-        #    if not self.parent.sign_on_time:
-        #        self.parent.sign_on()
-        #    return
-        #cfg = self.get_conf()
-        #iso = self.create_iso(from_iso=from_iso,
-        #        log_info=self.log_info,
-        #        log_error=self.log_error,
-        #        conf=cfg)
-        #try:
-        #    iso.process()
-        #except:
-            # Ada fatal error tidak perlu dijawab, biarkan timeout
-        #    self.log_exception()
-        #    return
         if iso:
             self.parent.send_iso(iso)
 
@@ -413,12 +398,6 @@ class ParserThread(Thread, BaseDaemon, Common):
         name = self.get_conf_val('name')
         return '%s %s %s -> %s %s' % (self.remote_host, name, id(self.parent),
                     id(self), s)
-
-    #def log_exception(self):        
-    #    f = StringIO()
-    #    traceback.print_exc(file=f)
-    #    self.log_error(f.getvalue())
-    #    f.close()
 
 
 ##############

@@ -32,3 +32,8 @@ class Models(object):
             __tablename__ = 'ref_propinsi'
             __table_args__ = dict(schema=db_schema, autoload=True)
         self.Propinsi = Propinsi
+
+        class TempatPembayaran(Base, CommonModel):
+            __tablename__ = 'tempat_pembayaran'
+            __table_args__ = dict(schema=db_schema, autoload=True)
+        self.TempatPembayaran = TempatPembayaran

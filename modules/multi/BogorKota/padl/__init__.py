@@ -12,6 +12,7 @@ from query import (
     Query,
     CalculateInvoice,
     NTP,
+    Reversal,
     )
 from conf import (
     db_url,
@@ -32,6 +33,21 @@ DBSession = scoped_session(session_factory)
 DBSession.configure(bind=engine)
 models = Models(Base, db_schema)
 query = Query(models, DBSession)
+
+
+class BaseResponse(object):
+    def __init__(self, parent):
+        self.parent = parent
+        self.invoice_id_raw = parent.from_iso.get_invoice_id()
+
+    def is_transaction_owner(self, iso_pay):
+        conf = host[self.parent.conf['name']]
+        return iso_pay.bank_id == conf['id']
+
+    def commit(self):
+        DBSession.commit()
+        self.parent.ack()
+
 
 
 class Inquiry(object):
@@ -88,7 +104,7 @@ class Inquiry(object):
         if self.calc.paid:
             return self.ack_already_paid()
         if self.calc.total <= 0:
-            return self.parent.ack_already_paid_2()
+            return self.parent.ack_already_paid_2(self.calc.total)
         return True
 
     def response(self):
@@ -191,3 +207,34 @@ class Payment(Inquiry):
 def payment(parent):
     pay = Payment(parent)
     pay.response()
+
+
+############
+# Reversal #
+############
+class ReversalResponse(BaseResponse):
+    def __init__(self, parent):
+        BaseResponse.__init__(self, parent)
+        self.rev = Reversal(models, DBSession, self.invoice_id_raw)
+
+    def response(self):
+        if not self.rev.invoice:
+            return self.parent.ack_payment_not_found()
+        if not self.rev.is_paid():
+            return self.parent.ack_invoice_open()
+        if not self.rev.payment:
+            return self.parent.ack_payment_not_found()
+        iso_pay = self.rev.get_iso_payment()
+        if not iso_pay:
+            return self.parent.ack_payment_not_found_2()
+        if not self.is_transaction_owner(iso_pay):
+            return self.parent.ack_payment_owner()
+        self.rev.set_unpaid()
+        self.commit()
+
+
+def reversal(parent):
+    rev = ReversalResponse(parent)
+    rev.response()
+
+

@@ -23,8 +23,10 @@ from structure import (
     ERR_INQUIRY_NOT_FOUND,
     ERR_PAYMENT_NOT_FOUND,
     ERR_PAYMENT_NOT_FOUND_2,
+    ERR_PAYMENT_OWNER,
     ERR_CREATE_PAYMENT,
     ERR_INVOICE_OPEN,
+    ERR_INSUFFICIENT_FUND,
     CABANG,
     )
 
@@ -38,6 +40,13 @@ METHODS = {
     PADL_PAYMENT_CODE:  'padl_payment_request_handler',
     WEBR_INQUIRY_CODE:  'webr_inquiry_request_handler',
     WEBR_PAYMENT_CODE:  'webr_payment_request_handler',
+    }
+
+REVERSAL_METHODS = {
+    PBB_PAYMENT_CODE:   'pbb_reversal_request_handler',
+    BPHTB_PAYMENT_CODE: 'bphtb_reversal_request_handler',
+    PADL_PAYMENT_CODE:  'padl_reversal_request_handler',
+    WEBR_PAYMENT_CODE:  'webr_reversal_request_handler',
     }
 
 INQUIRY_CODES = (PBB_INQUIRY_CODE, BPHTB_INQUIRY_CODE, PADL_INQUIRY_CODE,
@@ -66,6 +75,8 @@ class Transaction(BaseTransaction):
         if not self.is_transaction_request():
             return
         code = self.get_transaction_code()
+        if code not in INQUIRY_CODES:
+            return
         if code in METHODS:
             return METHODS[code]
 
@@ -76,6 +87,8 @@ class Transaction(BaseTransaction):
         if not self.is_transaction_request():
             return
         code = self.get_transaction_code()
+        if code not in PAYMENT_CODES:
+            return
         if code in METHODS:
             return METHODS[code]
 
@@ -90,6 +103,13 @@ class Transaction(BaseTransaction):
         self.set_transaction_response()
         self.copy([4, 48, 62])
         self.set_ntp('')
+
+    def is_reversal_request(self):
+        if not BaseTransaction.is_reversal_request(self):
+            return
+        code = self.get_transaction_code()
+        if code in METHODS:
+            return REVERSAL_METHODS[code]
 
     def get_invoice_id(self):
         return self.get_value(61).strip()
@@ -141,10 +161,9 @@ class Transaction(BaseTransaction):
                 invoice_id=self.from_iso.get_invoice_id())
         self.ack(RC_ALREADY_PAID, msg)
 
-    def ack_already_paid_2(self):
+    def ack_already_paid_2(self, nominal):
         msg = ERR_ALREADY_PAID_2.format(
-                invoice_id=self.from_iso.get_invoice_id(),
-                nominal=self.calc.total)
+                invoice_id=self.from_iso.get_invoice_id(), nominal=nominal)
         self.ack(RC_ALREADY_PAID, msg)
 
     def ack_create_payment_failed(self):
@@ -164,10 +183,14 @@ class Transaction(BaseTransaction):
     def ack_payment_not_found(self):
         self.ack(RC_NOT_AVAILABLE, ERR_PAYMENT_NOT_FOUND)
 
-    def ack_payment_not_found_2(self, invoice_id, ke):
-        msg = ERR_PAYMENT_NOT_FOUND_2.format(invoice_id=invoice_id, ke=ke)
+    def ack_payment_not_found_2(self):
+        msg = ERR_PAYMENT_NOT_FOUND_2.format(invoice_id=self.get_invoice_id())
         self.ack(RC_NOT_AVAILABLE, msg)
 
-    def ack_invoice_open(self, invoice_id):
-        msg = ERR_INVOICE_OPEN.format(invoice_id=invoice_id)
+    def ack_payment_owner(self):
+        msg = ERR_PAYMENT_OWNER.format(invoice_id=self.get_invoice_id())
+        self.ack(RC_NOT_AVAILABLE, msg)
+
+    def ack_invoice_open(self):
+        msg = ERR_INVOICE_OPEN.format(invoice_id=self.get_invoice_id())
         self.ack(RC_ALREADY_PAID, msg)

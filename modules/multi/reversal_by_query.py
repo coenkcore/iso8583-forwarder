@@ -11,6 +11,7 @@ def main(argv):
     pars.add_option('-i', '--invoice-id')
     pars.add_option('', '--force', action='store_true', help=help_force)
     option, remain = pars.parse_args(argv)
+    module_name = option.module
     name = '.'.join(['multi', conf.module_name, module_name, 'ReversalByQuery'])
     module = __import__(name)
     area_module = getattr(module, conf.module_name)
@@ -21,7 +22,7 @@ def main(argv):
     if not rbq.invoice:
         print('Tagihan tidak ditemukan.')
         return
-    if not rbq.is_paid():
+    if not rbq.is_paid() and not option.force:
         print('Status memang belum dibayar, tidak perlu dilanjutkan.')
         return
     if not rbq.payment and not option.force:

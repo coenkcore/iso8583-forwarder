@@ -45,13 +45,22 @@ class Invoice(Query):
         self.invoice_id_raw = invoice_id_raw
         self.invoice_id = FixLength(INVOICE_ID)
         self.invoice_id.set_raw(invoice_id_raw)
-        q = self.query_invoice(self.invoice_id['Tahun'],
-                str(int(self.invoice_id['Kode'])),
+        self.invoice = False 
+        try:
+            kode = int(self.invoice_id['Kode'])
+        except TypeError:
+            return
+        except ValueError:
+            return
+        q = self.query_invoice(self.invoice_id['Tahun'], str(kode),
                 self.invoice_id['SSPD No'])
         self.invoice = q.first()
 
     def is_paid(self):
         return self.invoice.status_pembayaran == 1
+
+    def get_payment(self):
+        return Query.get_payment(self, self.invoice)
 
 
 class CalculateInvoice(Invoice):
@@ -81,9 +90,6 @@ class CalculateInvoice(Invoice):
             self.invoice.tgl_jatuh_tempo.date(), self.persen_denda)
         self.denda = round_up(self.denda)
         self.total = self.tagihan + self.denda
-
-    def get_payment(self):
-        return Query.get_payment(self, self.invoice)
 
     def get_iso_payment(self):
         if not self.invoice or not self.paid or not self.payment:
@@ -127,10 +133,17 @@ class CalculateInvoice(Invoice):
 
 
 class Reversal(Invoice):
+    def __init__(self, *args, **kwargs):
+        Invoice.__init__(self, *args, **kwargs)
+        self.payment = self.get_payment()
+
+    def get_iso_payment(self):
+        return Query.get_iso_payment(self, self.payment)
+
     def set_unpaid(self):
         self.invoice.status_pembayaran = 0
         self.DBSession.add(self.invoice)
-        payment = self.get_payment()
-        if payment:
-            payment.bayar = payment.denda = 0
-            self.DBSession.add(payment)
+        if self.payment:
+            self.payment.bayar = self.payment.denda = 0
+            self.DBSession.add(self.payment)
+        self.DBSession.flush()

@@ -47,16 +47,17 @@ ERR_NOT_AVAILABLE = 'Invoice ID {invoice_id} tidak ada'
 ERR_ALREADY_PAID = 'Invoice ID {invoice_id} sudah dibayar'
 ERR_ALREADY_PAID_2 = 'Invoice ID {invoice_id} sudah lunas, '\
                      'tagihannya Rp {nominal}'
-ERR_AMOUNT = 'Invoice ID {invoice_id} belum lunas tapi nilai tagihannya ' + \
+ERR_AMOUNT = 'Invoice ID {invoice_id} belum lunas tapi nilai tagihannya '\
     '{nominal}'
-ERR_INSUFFICIENT_FUND = 'Invoice ID {invoice_id} pembayaran {bayar} ' + \
+ERR_INSUFFICIENT_FUND = 'Invoice ID {invoice_id} pembayaran {bayar} '\
     'tidak sama dengan {tagihan}'
 ERR_INQUIRY_NOT_FOUND = 'Invoice ID {invoice_id} belum di-inquiry'
 ERR_PAYMENT_NOT_FOUND = 'Payment request tidak ada'
-ERR_PAYMENT_NOT_FOUND_2 = 'Pembayaran invoice ID {invoice_id} ke {ke} ' + \
-    'tidak ada'
+ERR_PAYMENT_NOT_FOUND_2 = 'Pembayaran invoice ID {invoice_id} tidak melalui '\
+    'jalur ini'
+ERR_PAYMENT_OWNER = 'Bukan pemilik pembayaran invoice ID {invoice_id}'
 ERR_CREATE_PAYMENT = 'Ada masalah saat membuat payment ID'
-ERR_REVERSAL_OWNER = 'Invoice ID {invoice_id} bukan dibayar oleh ' + \
+ERR_REVERSAL_OWNER = 'Invoice ID {invoice_id} bukan dibayar oleh '\
     'Bank ID {bank_id}' 
 ERR_INVOICE_OPEN = 'Status invoice ID {invoice_id} memang belum dibayar'
 ERR_SETTLEMENT_DATE = 'Settlement date {raw} tidak benar'

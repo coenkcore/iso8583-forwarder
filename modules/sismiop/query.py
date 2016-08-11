@@ -14,29 +14,25 @@ class Query(object):
         self.models = models
         self.DBSession = DBSession
 
-    def query_sppt(self, propinsi, kabupaten, kecamatan, kelurahan, blok, urut,
+    def query_invoice(self, propinsi, kabupaten, kecamatan, kelurahan, blok, urut,
         jenis, tahun):
         return self.DBSession.query(self.models.Invoice).filter_by(
                 kd_propinsi=propinsi, kd_dati2=kabupaten,
                 kd_kecamatan=kecamatan, kd_kelurahan=kelurahan, kd_blok=blok,
                 no_urut=urut, kd_jns_op=jenis, thn_pajak_sppt=tahun)
 
-    def query_pembayaran(self, propinsi, kabupaten, kecamatan, kelurahan, blok, urut,
+    def query_payment(self, propinsi, kabupaten, kecamatan, kelurahan, blok, urut,
         jenis, tahun):
         return self.DBSession.query(self.models.Pembayaran).filter_by(
                 kd_propinsi=propinsi, kd_dati2=kabupaten,
                 kd_kecamatan=kecamatan, kd_kelurahan=kelurahan, kd_blok=blok,
                 no_urut=urut, kd_jns_op=jenis, thn_pajak_sppt=tahun)
 
-    def pay2bayar(self, pay):
-        q = self.query_pembayaran(pay.propinsi, pay.kabupaten, pay.kecamatan,
-                pay.kelurahan, pay.blok, pay.urut, pay.jenis, str(pay.tahun))
-        q = q.filter_by(pembayaran_sppt_ke=pay.ke)
-        return q.first()
-
-    def pay2sppt(self, pay):
-        q = self.query_sppt(pay.propinsi, pay.kabupaten, pay.kecamatan, pay.kelurahan,
-                pay.blok, pay.urut, pay.jenis, str(pay.tahun))
+    def invoice2payment(self, inv):
+        q = self.query_payment(inv.kd_propinsi, inv.kd_dati2,
+                inv.kd_kecamatan, inv.kd_kelurahan, inv.kd_blok, inv.no_urut,
+                inv.kd_jns_op, inv.thn_pajak_sppt)
+        q = q.order_by(self.models.Pembayaran.pembayaran_sppt_ke.desc())
         return q.first()
 
     def cari_kelurahan(self, propinsi, kabupaten, kecamatan, kelurahan):
@@ -57,30 +53,6 @@ class Query(object):
         r = q.first()
         return r and r.nm_propinsi or ''
 
-    def invoice2inquiry(self, sppt):
-        q = self.DBSession.query(self.models.Inquiry).filter_by(propinsi=sppt.kd_propinsi,
-                kabupaten=sppt.kd_dati2, kecamatan=sppt.kd_kecamatan,
-                kelurahan=sppt.kd_kelurahan, blok=sppt.kd_blok,
-                urut=sppt.no_urut, jenis=sppt.kd_jns_op,
-                tahun=sppt.thn_pajak_sppt)
-        q = q.order_by(self.models.Inquiry.id.desc())
-        return q.first()
-
-    def invoice2payment(self, sppt):
-        q = self.DBSession.query(self.models.Payment).filter_by(propinsi=sppt.kd_propinsi,
-                kabupaten=sppt.kd_dati2, kecamatan=sppt.kd_kecamatan,
-                kelurahan=sppt.kd_kelurahan, blok=sppt.kd_blok,
-                urut=sppt.no_urut, jenis=sppt.kd_jns_op,
-                tahun=sppt.thn_pajak_sppt)
-        q = q.order_by(self.models.Payment.ke.desc())
-        return q.first()
-
-    def inq2bayar(self, inq):
-        q = self.query_pembayaran(inq.propinsi, inq.kabupaten, inq.kecamatan,
-                inq.kelurahan, inq.blok, inq.urut, inq.jenis, str(inq.tahun))
-        q = q.order_by(self.models.Pembayaran.pembayaran_sppt_ke.desc())
-        return q.first()
-
     def is_paid(self):
         return self.invoice.status_pembayaran_sppt == '1'
 
@@ -98,7 +70,7 @@ class CalculateInvoice(Query):
         self.urut = urut
         self.jenis = jenis
         self.tahun = tahun
-        q = self.query_sppt(propinsi, kabupaten, kecamatan, kelurahan, blok, urut,
+        q = self.query_invoice(propinsi, kabupaten, kecamatan, kelurahan, blok, urut,
                 jenis, tahun)
         self.invoice = q.first()
         if self.invoice:
@@ -137,26 +109,26 @@ class CalculateInvoice(Query):
     def set_paid(self):
         self.invoice.status_pembayaran_sppt = '1' # Lunas
 
-    def create_payment(self, inq, tgl_bayar, bank_fields, nip_pencatat):
-        bayar = self.inq2bayar(inq)
+    def create_payment(self, denda, tgl_bayar, bank_fields, nip_pencatat):
+        bayar = self.invoice2payment()
         if bayar:
             ke = bayar.pembayaran_sppt_ke + 1
         else:
             ke = 1
         bayar = self.models.Pembayaran()
-        bayar.kd_propinsi = inq.propinsi
-        bayar.kd_dati2 = inq.kabupaten
-        bayar.kd_kecamatan = inq.kecamatan
-        bayar.kd_kelurahan = inq.kelurahan
-        bayar.kd_blok = inq.blok
-        bayar.no_urut = inq.urut
-        bayar.kd_jns_op = inq.jenis
-        bayar.thn_pajak_sppt = inq.tahun
+        bayar.kd_propinsi = self.invoice.kd_propinsi
+        bayar.kd_dati2 = self.invoice.kd_dati2
+        bayar.kd_kecamatan = self.invoice.kd_kecamatan
+        bayar.kd_kelurahan = self.invoice.kd_kelurahan
+        bayar.kd_blok = self.invoice.kd_blok
+        bayar.no_urut = self.invoice.no_urut
+        bayar.kd_jns_op = self.invoice.kd_jns_op
+        bayar.thn_pajak_sppt = self.invoice.thn_pajak_sppt
         bayar.pembayaran_sppt_ke = ke
         bayar.tgl_rekam_byr_sppt = datetime.now()
         bayar.tgl_pembayaran_sppt = tgl_bayar 
         bayar.jml_sppt_yg_dibayar = self.total
-        bayar.denda_sppt = inq.denda
+        bayar.denda_sppt = denda
         bayar.nip_rekam_byr_sppt = nip_pencatat
         bayar.from_dict(bank_fields)
         self.set_paid()
@@ -173,36 +145,26 @@ class CalculateInvoice(Query):
 ############
 # Reversal #
 ############
-class ReversalCommon(object):
-    def set_unpaid(self):
-        self.invoice.status_pembayaran_sppt = '0'
-        self.bayar.jml_sppt_yg_dibayar = 0 
-        self.bayar.denda_sppt = 0
-
-
-class PaymentReversal(ReversalCommon, Query):
-    def __init__(self, models, DBSession, pay):
+class Reversal(Query):
+    def __init__(self, models, DBSession, propinsi, kabupaten, kecamatan,
+            kelurahan, blok, urut, jenis, tahun):
         Query.__init__(self, models, DBSession)
-        self.pay = pay
-        self.bayar = self.pay2bayar(pay)
-        if not self.bayar:
-            return
-        self.invoice = self.pay2sppt(pay)
-
-
-class ReversalByQuery(ReversalCommon, Query):
-    def __init__(self, models, DBSession, invoice_id):
-        Query.__init__(self, models, DBSession)
-        q = self.query_sppt(invoice_id['Propinsi'], invoice_id['Kabupaten'],
-                invoice_id['Kecamatan'], invoice_id['Kelurahan'],
-                invoice_id['Blok'], invoice_id['Urut'], invoice_id['Jenis'],
-                invoice_id['Tahun Pajak'])
+        q = self.query_invoice(propinsi, kabupaten, kecamatan, kelurahan,
+                blok, urut, jenis, tahun)
         self.invoice = q.first()
         if not self.invoice:
             return
-        q = self.query_pembayaran(invoice_id['Propinsi'],
-                invoice_id['Kabupaten'], invoice_id['Kecamatan'],
-                invoice_id['Kelurahan'], invoice_id['Blok'], invoice_id['Urut'],
-                invoice_id['Jenis'], invoice_id['Tahun Pajak'])
-        q = q.order_by(Pembayaran.pembayaran_sppt_ke.desc())
-        self.bayar = q.first()
+        self.payment = self.invoice2payment()
+
+    def invoice2payment(self):
+        return Query.invoice2payment(self, self.invoice)
+
+    def set_unpaid(self):
+        self.invoice.status_pembayaran_sppt = '0'
+        self.DBSession.add(self.invoice)
+        if self.payment:
+            self.payment.jml_sppt_yg_dibayar = 0 
+            self.payment.denda_sppt = 0
+            self.DBSession.add(self.payment)
+        self.DBSession.flush()
+        return self.payment

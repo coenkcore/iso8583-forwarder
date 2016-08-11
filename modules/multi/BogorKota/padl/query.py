@@ -5,7 +5,6 @@ from tools import (
     FixLength,
     DbTransactionID,
     )
-from common.pbb.structure import NOP
 from sismiop.tools import hitung_denda
 from structure import INVOICE_ID
 from conf import persen_denda
@@ -52,6 +51,9 @@ class Invoice(Query):
     def is_paid(self):
         return self.invoice.status_pembayaran == 1
 
+    def get_payment(self):
+        return Query.get_payment(self, self.invoice)
+
 
 class CalculateInvoice(Invoice):
     def __init__(self, models, DBSession, invoice_id_raw, persen_denda):
@@ -63,7 +65,7 @@ class CalculateInvoice(Invoice):
             self.hitung()
             self.paid = self.is_paid()
             if self.paid:
-                self.payment = self.get_payment(self.invoice)
+                self.payment = self.get_payment()
 
     def hitung(self):
         self.bunga = self.invoice.bunga or 0
@@ -123,10 +125,17 @@ class CalculateInvoice(Invoice):
 
 
 class Reversal(Invoice):
+    def __init__(self, *args, **kwargs):
+        Invoice.__init__(self, *args, **kwargs)
+        self.payment = self.get_payment()
+
+    def get_iso_payment(self):
+        return Query.get_iso_payment(self, self.payment)
+
     def set_unpaid(self):
         self.invoice.status_pembayaran = 0
         self.DBSession.add(self.invoice)
-        payment = self.get_payment()
-        if payment:
-            payment.jml_bayar = payment.denda = payment.bunga = 0
-            self.DBSession.add(payment)
+        if self.payment:
+            self.payment.jml_bayar = self.payment.denda = self.payment.bunga = 0
+            self.DBSession.add(self.payment)
+        self.DBSession.flush()

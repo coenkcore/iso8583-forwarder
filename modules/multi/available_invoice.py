@@ -1,8 +1,12 @@
+import sys
 from optparse import OptionParser
 import conf
 
 
 def main(argv):
+    if not argv:
+        print('Caranya: {c} multi <module>'.format(c=sys.argv[0]))
+        return
     module_name = argv[0]
     argv = argv[1:]
     name = '.'.join(['multi', conf.module_name, module_name,
