@@ -14,6 +14,8 @@ def bulan_tunggakan(jatuh_tempo, tgl_hitung):
     return n
 
 def hitung_denda(tagihan, jatuh_tempo, persen_denda, tgl_hitung=None):
+    if jatuh_tempo is None:
+        return 0, 0
     if tgl_hitung is None:
         tgl_hitung = date.today()
     if type(jatuh_tempo) is not date:

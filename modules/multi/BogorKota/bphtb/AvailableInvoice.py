@@ -28,7 +28,8 @@ class AvailableInvoice(object):
     def show(self, option):
         sample_count = int(option.sample_count)
         q = DBSession.query(models.Invoice).filter_by(status_pembayaran=0)
-        q = q.order_by(models.Invoice.id.desc())
+        q = q.order_by(models.Invoice.bphtb_harus_dibayarkan)
+        #q = q.order_by(models.Invoice.id.desc())
         offset = -1
         count = 0
         while True:

@@ -46,7 +46,9 @@ class AvailableInvoice(object):
             q = q.filter(models.Invoice.jatuhtempotgl < date.today())
         elif option.tanpa_denda:
             q = q.filter(models.Invoice.jatuhtempotgl >= date.today())
-        q = q.order_by(models.Invoice.tahun.desc(), models.Invoice.sptno.desc())
+        q = q.filter(models.Invoice.pajak_terhutang > 0)
+        q = q.order_by(models.Invoice.pajak_terhutang)
+        #q = q.order_by(models.Invoice.tahun.desc(), models.Invoice.sptno.desc())
         offset = -1
         count = 0
         while True:

@@ -112,7 +112,7 @@ class Transaction(BaseTransaction):
             return REVERSAL_METHODS[code]
 
     def get_invoice_id(self):
-        return self.get_value(61).strip()
+        return self.get_value(61).strip().lstrip('0')
 
     def set_invoice_profile(self, raw):
         self.setBit(62, raw)
