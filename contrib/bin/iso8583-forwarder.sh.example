@@ -1,0 +1,6 @@
+cd /home/sugiana/2016/10/iso8583-forwarder
+python iso8583-forwarder.py \
+    -p /home/sugiana/tmp/iso8583-forwarder.pid \
+    -c conf/forwarder.py \
+    -l /home/sugiana/tmp/iso8583-forwarder-logs \
+    "$@"

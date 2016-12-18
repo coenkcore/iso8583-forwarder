@@ -16,9 +16,9 @@ from sismiop.models import Models as SismiopModels
 
 
 class Models(SismiopModels):
-    def __init__(self, Base, db_schema, iso_db_schema=None):
+    def __init__(self, Base, db_schema, iso_db_schema=False):
         SismiopModels.__init__(self, Base, db_schema)
-        if iso_db_schema is None:
+        if iso_db_schema is False:
             iso_db_schema = db_schema
         self.InquirySeq = Sequence('inquiry_seq', schema=iso_db_schema)
 

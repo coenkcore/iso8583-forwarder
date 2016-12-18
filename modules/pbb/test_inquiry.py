@@ -2,38 +2,29 @@ from datetime import datetime
 from pprint import pprint
 from time import sleep
 from optparse import OptionParser
-from structure import (
-    PBB_INQUIRY_CODE,
-    BPHTB_INQUIRY_CODE,
-    PADL_INQUIRY_CODE,
-    )
+from structure import INQUIRY_CODE
+from transaction import Transaction
 import conf
 
 
-INQUIRY_CODES = dict(
-    pbb=PBB_INQUIRY_CODE,
-    bphtb=BPHTB_INQUIRY_CODE,
-    padl=PADL_INQUIRY_CODE)
-
-name = '.'.join(['multi', conf.module_name])
+name = '.'.join(['pbb', conf.module_name])
 module = __import__(name)
 area_module = getattr(module, conf.module_name)
-DbTransaction = area_module.DbTransaction
+InquiryResponse = area_module.InquiryResponse
 
 
-class Inquiry(DbTransaction):
-    def inquiry_request(self, module_name, invoice_id, bank_id):
-        inquiry_code = INQUIRY_CODES[module_name]
+class Inquiry(Transaction):
+    def inquiry_request(self, module_name, invoice_id):
         self.set_transaction_request()
         kini = datetime.now()
         self.setBit(2, kini.strftime('%Y%m%d%H%M%S')) 
-        self.set_transaction_code(inquiry_code) 
+        self.set_transaction_code(INQUIRY_CODE) 
         self.setBit(12, kini.strftime('%H%M%S')) 
         self.setBit(13, kini.strftime('%m%d')) 
         self.setBit(15, kini.strftime('%m%d')) 
         self.setBit(18, '6010') 
         self.setBit(22, '021')
-        self.setBit(32, bank_id)
+        self.setBit(32, '110')
         self.setBit(33, '00110')
         self.setBit(35, '')
         self.setBit(37, kini.strftime('%H%M%S')) 
@@ -61,28 +52,21 @@ class Test(object):
 
 
 class TestInquiry(Test):
-    def __init__(self, argv):
-        self.option = get_option(argv)
-        if not self.option:
-            return
-        self.module_name = self.option.module
-        self.invoice_id = self.option.invoice_id
-        streamer_name, bank_id = split_bank(self.option.bank)
-        self.conf = dict(name=streamer_name, ip='127.0.0.1', bank_id=bank_id)
+    def __init__(self, module_name, invoice_id, conf={}):
+        self.module_name = module_name
+        self.invoice_id = invoice_id
+        self.conf = conf
 
     def run(self):
-        if not self.option:
-            return
         print('Bank kirim inquiry request')
         req_iso = Inquiry()
-        req_iso.inquiry_request(self.module_name, self.invoice_id,
-            self.conf['bank_id'])
+        req_iso.inquiry_request(self.module_name, self.invoice_id)
         raw = self.get_raw(req_iso)
         print('Pemda terima inquiry request')
-        from_iso = DbTransaction()
+        from_iso = Transaction()
         from_iso.setIsoContent(raw)
         print('Pemda kirim inquiry response')
-        resp_iso = DbTransaction(from_iso=from_iso, conf=self.conf)
+        resp_iso = InquiryResponse(from_iso=from_iso, conf=self.conf)
         func = getattr(resp_iso, from_iso.get_func_name())
         func()
         self.get_raw(resp_iso)
@@ -94,8 +78,7 @@ def get_option(argv):
     bank = 'btn'
     pars = OptionParser()
     help_module = 'default {m}'.format(m=module_name)
-    help_bank = 'default {b}. Contoh lain: mitracomm,14 dimana 14 adalah BCA'.\
-            format(b=bank)
+    help_bank = 'default {b}'.format(b=bank)
     pars.add_option('-m', '--module', default=module_name, help=help_module)
     pars.add_option('-i', '--invoice-id')
     pars.add_option('-b', '--bank', default=bank, help=help_bank)
@@ -105,24 +88,12 @@ def get_option(argv):
         return
     return option
 
-def split_bank(s):
-    t = s.split(',')
-    if t[1:]:
-        streamer_name = t[0]
-        bank_id = int(t[1])
-    else:
-        streamer_name = s 
-        bank_id = 0 
-    return streamer_name, bank_id
-
-class MainProcess(object):
-    def __init__(self, argv):
-        self.option = get_option(argv)
-        if not self.option:
-            return
-        streamer_name, bank_id = split_bank(self.option.bank)
-        self.conf = dict(name=streamer_name, ip='127.0.0.1', bank_id=bank_id)
-
 def main(argv):
-    test = TestInquiry(argv)
+    option = get_option(argv)
+    if not option:
+        return
+    module_name = option.module
+    invoice_id = option.invoice_id
+    conf = dict(name=option.bank, ip='127.0.0.1')
+    test = TestInquiry(module_name, invoice_id, conf)
     test.run()

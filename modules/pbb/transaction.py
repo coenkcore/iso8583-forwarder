@@ -4,14 +4,8 @@ from network import Network
 from common.transaction import BaseTransaction
 from structure import (
     TRANSACTION_BITS,
-    PBB_INQUIRY_CODE,
-    PBB_PAYMENT_CODE,
-    BPHTB_INQUIRY_CODE,
-    BPHTB_PAYMENT_CODE,
-    PADL_INQUIRY_CODE,
-    PADL_PAYMENT_CODE,
-    WEBR_INQUIRY_CODE,
-    WEBR_PAYMENT_CODE,
+    INQUIRY_CODE,
+    PAYMENT_CODE,
     RC_ALREADY_PAID,
     RC_NOT_AVAILABLE,
     RC_INSUFFICIENT_FUND,
@@ -30,28 +24,10 @@ from structure import (
 
 
 METHODS = {
-    PBB_INQUIRY_CODE:   'pbb_inquiry_request_handler',
-    PBB_PAYMENT_CODE:   'pbb_payment_request_handler',
-    BPHTB_INQUIRY_CODE: 'bphtb_inquiry_request_handler',
-    BPHTB_PAYMENT_CODE: 'bphtb_payment_request_handler',
-    PADL_INQUIRY_CODE:  'padl_inquiry_request_handler',
-    PADL_PAYMENT_CODE:  'padl_payment_request_handler',
-    WEBR_INQUIRY_CODE:  'webr_inquiry_request_handler',
-    WEBR_PAYMENT_CODE:  'webr_payment_request_handler',
+    INQUIRY_CODE:   'inquiry_request_handler',
+    PAYMENT_CODE:   'payment_request_handler',
     }
 
-REVERSAL_METHODS = {
-    PBB_PAYMENT_CODE:   'pbb_reversal_request_handler',
-    BPHTB_PAYMENT_CODE: 'bphtb_reversal_request_handler',
-    PADL_PAYMENT_CODE:  'padl_reversal_request_handler',
-    WEBR_PAYMENT_CODE:  'webr_reversal_request_handler',
-    }
-
-INQUIRY_CODES = (PBB_INQUIRY_CODE, BPHTB_INQUIRY_CODE, PADL_INQUIRY_CODE,
-                 WEBR_INQUIRY_CODE)
-
-PAYMENT_CODES = (PBB_PAYMENT_CODE, BPHTB_PAYMENT_CODE, PADL_PAYMENT_CODE,
-                 WEBR_PAYMENT_CODE)
 
 class Transaction(BaseTransaction):
     # Override
@@ -73,25 +49,25 @@ class Transaction(BaseTransaction):
         if not self.is_transaction_request():
             return
         code = self.get_transaction_code()
-        if code not in INQUIRY_CODES:
+        if code != INQUIRY_CODE:
             return
         if code in METHODS:
             return METHODS[code]
 
     def is_inquiry_response(self):
-        return self.get_transaction_code() in INQUIRY_CODES
+        return self.get_transaction_code() == INQUIRY_CODE
 
     def is_payment_request(self):
         if not self.is_transaction_request():
             return
         code = self.get_transaction_code()
-        if code not in PAYMENT_CODES:
+        if code != PAYMENT_CODE:
             return
         if code in METHODS:
             return METHODS[code]
 
     def is_payment_response(self):
-        return self.get_transaction_code() in PAYMENT_CODES
+        return self.get_transaction_code() == PAYMENT_CODE
 
     def set_transaction_response(self):
         BaseTransaction.set_transaction_response(self)
@@ -105,12 +81,11 @@ class Transaction(BaseTransaction):
     def is_reversal_request(self):
         if not BaseTransaction.is_reversal_request(self):
             return
-        code = self.get_transaction_code()
-        if code in METHODS:
-            return REVERSAL_METHODS[code]
+        if self.get_transaction_code() == PAYMENT_CODE:
+            return 'reversal_request_handler'
 
     def get_invoice_id(self):
-        return self.get_value(61).strip().lstrip('0')
+        return self.get_value(61).strip()
 
     def set_invoice_profile(self, raw):
         self.setBit(62, raw)

@@ -8,7 +8,6 @@ from test_inquiry import (
     Inquiry,
     DbTransaction,
     TestInquiry,
-    get_option,
     )
 
 
@@ -19,9 +18,10 @@ PAYMENT_CODES = dict(
 
 
 class Payment(Inquiry):
-    def payment_request(self, module_name, inq_resp_iso):
+    def payment_request(self, module_name, inq_resp_iso, bank_id):
         payment_code = PAYMENT_CODES[module_name]
-        self.inquiry_request(module_name, inq_resp_iso.get_invoice_id())
+        self.inquiry_request(module_name, inq_resp_iso.get_invoice_id(),
+            bank_id)
         self.set_transaction_code(payment_code)
         self.set_amount(inq_resp_iso.get_amount())
         ntb = datetime.now().strftime('%Y%m%d%H%M%S')
@@ -36,7 +36,7 @@ class TestPayment(TestInquiry):
             return resp_iso, None
         print('Bank kirim payment request')
         req_iso = Payment()
-        req_iso.payment_request(self.module_name, resp_iso)
+        req_iso.payment_request(self.module_name, resp_iso, self.conf['bank_id'])
         raw = self.get_raw(req_iso)
         print('Pemda terima payment request')
         from_iso = DbTransaction()
@@ -50,11 +50,5 @@ class TestPayment(TestInquiry):
 
 
 def main(argv):
-    option = get_option(argv)
-    if not option:
-        return
-    module_name = option.module
-    invoice_id = option.invoice_id
-    conf = dict(name=option.bank, ip='127.0.0.1')
-    test = TestPayment(module_name, invoice_id, conf)
+    test = TestPayment(argv)
     test.run()

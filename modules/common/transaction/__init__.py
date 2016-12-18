@@ -6,9 +6,12 @@ from ISO8583Server import (
 from network import Network
 from structure import (
     BASE_TRANSACTION_BITS,
+    RC_INVALID_NUMBER,
     ERR_SETTLEMENT_DATE,
     ERR_TRANSACTION_DATETIME,
     ERR_TRANSACTION_DATE,
+    ERR_INVALID_BANK,
+    ERR_INVALID_NUMBER,
     )
 
 
@@ -129,8 +132,8 @@ class BaseTransaction(Network):
         except ValueError:
             self.ack_transaction_date()
 
-    def get_forwarder(self):
-        return self.get_value(33)
+    def get_bank_id(self):
+        return int(self.get_value(32))
 
     def get_sequence(self):
         return self.get_value(37)
@@ -188,3 +191,12 @@ class BaseTransaction(Network):
         raw = self.get_transaction_time_raw()
         msg = ERR_TRANSACTION_TIME.format(raw=[raw])
         self.ack_other(msg)
+
+    def ack_invalid_number(self):
+        msg = ERR_INVALID_NUMBER.format(
+                invoice_id=self.from_iso.get_invoice_id())
+        self.ack(RC_INVALID_NUMBER, msg)
+
+    def ack_not_allowed(self):
+        msg = ERR_INVALID_BANK.format(bank_id=self.from_iso.get_bank_id())
+        self.ack(RC_INVALID_NUMBER, msg)

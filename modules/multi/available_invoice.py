@@ -18,7 +18,7 @@ def main(argv):
     AvailableInvoice = available_inv_module.AvailableInvoice
     ai = AvailableInvoice()
     pars = OptionParser()
-    sample_count = 10
+    sample_count = 40
     help_count = 'default {count}'.format(count=sample_count)
     pars.add_option('-c', '--sample-count', default=sample_count,
         help=help_count)

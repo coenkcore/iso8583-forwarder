@@ -1,0 +1,3 @@
+#!/bin/sh
+
+su - sugiana -c "sh /home/sugiana/bin/iso8583-forwarder.sh $@"

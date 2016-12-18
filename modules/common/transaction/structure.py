@@ -27,6 +27,9 @@ BASE_TRANSACTION_BITS.update({
     43: ['Card', 'Card Acceptor Name / Location', 'ANS', 40, 'ans'],
     })
 
+RC_INVALID_NUMBER = '33'
+ERR_INVALID_NUMBER = 'Invoice ID {invoice_id} tidak benar'
+ERR_INVALID_BANK = 'Bank ID {id} tidak diperkenankan'
 ERR_SETTLEMENT_DATE = 'Settlement date {raw} tidak benar'
 ERR_TRANSACTION_DATETIME = 'Transaction datetime {raw} tidak benar'
 ERR_TRANSACTION_DATE = 'Transaction date {raw} tidak benar'

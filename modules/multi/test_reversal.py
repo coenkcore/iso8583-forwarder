@@ -3,7 +3,6 @@ from test_payment import (
     DbTransaction,
     Payment,
     TestPayment,
-    get_option,
     )
 
 
@@ -33,11 +32,5 @@ class TestReversal(TestPayment):
 
 
 def main(argv):
-    option = get_option(argv)
-    if not option:
-        return
-    module_name = option.module
-    invoice_id = option.invoice_id
-    conf = dict(name=option.bank, ip='127.0.0.1')
-    test = TestReversal(module_name, invoice_id, conf)
+    test = TestReversal(argv)
     test.run()

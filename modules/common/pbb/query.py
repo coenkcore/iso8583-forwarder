@@ -50,7 +50,7 @@ class Inquiry(SismiopQuery):
                 jenis=inv.kd_jns_op, tahun=inv.thn_pajak_sppt,
                 tgl=calc.kini)
         inq.stan = from_iso.get_stan()
-        inq.pengirim = from_iso.get_forwarder()
+        inq.pengirim = from_iso.get_bank_id()
         inq.transmission = from_iso.get_transmission()
         inq.settlement = from_iso.get_settlement()
         inq.tagihan = calc.tagihan

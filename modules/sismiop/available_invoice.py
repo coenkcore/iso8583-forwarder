@@ -21,12 +21,20 @@ class AvailableInvoice(object):
         self.persen_denda = 'persen_denda' in kwargs and \
             kwargs['persen_denda'] or 0
 
+    def add_option(self, pars):
+        pars.add_option('', '--min', help='Tagihan minimum')
+        pars.add_option('', '--max', help='Tagihan maksimum')
+
     def show(self, option):
         sample_count = int(option.sample_count)
         q = DBSession.query(self.models.Invoice).filter_by(
                 status_pembayaran_sppt = '0')
-        q = q.filter(self.models.Invoice.pbb_yg_harus_dibayar_sppt >= 100,
-                     self.models.Invoice.pbb_yg_harus_dibayar_sppt < 1000)
+        if option.min:
+            n = int(option.min)
+            q = q.filter(self.models.Invoice.pbb_yg_harus_dibayar_sppt >= n)
+        if option.max:
+            n = int(option.max)
+            q = q.filter(self.models.Invoice.pbb_yg_harus_dibayar_sppt <= n)
         q = q.order_by(self.models.Invoice.thn_pajak_sppt.desc(),
                        self.models.Invoice.pbb_yg_harus_dibayar_sppt)
         offset = -1
