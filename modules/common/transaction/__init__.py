@@ -198,5 +198,5 @@ class BaseTransaction(Network):
         self.ack(RC_INVALID_NUMBER, msg)
 
     def ack_not_allowed(self):
-        msg = ERR_INVALID_BANK.format(bank_id=self.from_iso.get_bank_id())
+        msg = ERR_INVALID_BANK.format(id=self.from_iso.get_bank_id())
         self.ack(RC_INVALID_NUMBER, msg)

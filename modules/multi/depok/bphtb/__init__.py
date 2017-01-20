@@ -1,4 +1,4 @@
-from time import sleep
+#from time import sleep
 from datetime import datetime
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
@@ -44,6 +44,8 @@ class BaseResponse(object):
 
     def is_allowed(self):
         bank_name = self.parent.conf['name']
+        if bank_name not in host: 
+            return self.parent.ack_not_allowed() 
         tp_conf = host[bank_name] 
         if 'kd_tp' not in tp_conf:
             bank_id = self.parent.from_iso.get_bank_id()
@@ -201,8 +203,8 @@ class Payment(Inquiry):
         self.create_iso_payment(pay)
         self.parent.set_ntp(ntp)
         self.commit()
-        #detik = 40
-        #self.parent.log_info('Tunggu {d} detik, BTN uji reversal.'.format(
+        #detik = 120
+        #self.parent.log_info('Tunggu {d} detik, BTN uji payment timeout.'.format(
         #    d=detik))
         #sleep(detik)
 
@@ -335,7 +337,10 @@ class ReversalResponse(BaseResponse):
             return self.parent.ack_payment_owner()
         self.rev.set_unpaid()
         self.commit()
-
+        #detik = 120
+        #self.parent.log_info('Tunggu {d} detik, BTN uji reversal timeout.'.format(
+        #    d=detik))
+        #sleep(detik)
 
 def reversal(parent):
     rev = ReversalResponse(parent)

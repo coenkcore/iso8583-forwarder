@@ -1,4 +1,4 @@
-from time import sleep
+#from time import sleep
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import (
@@ -176,8 +176,8 @@ class PaymentResponse(InquiryResponse):
             return self.parent.ack_inquiry_not_found()
         self.create_payment(inq)
         self.commit()
-        #detik = 40
-        #self.parent.log_info('Tunggu {d} detik, BTN uji reversal.'.format(
+        #detik = 120
+        #self.parent.log_info('Tunggu {d} detik, BTN uji payment timeout.'.format(
         #    d=detik))
         #sleep(detik)
 
@@ -251,6 +251,10 @@ class ReversalResponse(BaseResponse):
             return self.parent.ack_payment_not_found_2()
         self.rev.set_unpaid()
         self.commit()
+        #detik = 120
+        #self.parent.log_info('Tunggu {d} detik, BTN uji reversal timeout.'.format(
+        #    d=detik))
+        #sleep(detik)
 
     def is_transaction_owner(self):
         return BaseResponse.is_transaction_owner(self, self.rev.payment)

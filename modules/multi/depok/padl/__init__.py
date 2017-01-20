@@ -1,5 +1,5 @@
 from datetime import datetime
-from time import sleep
+#from time import sleep
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import (
@@ -40,6 +40,19 @@ class BaseResponse(object):
     def __init__(self, parent):
         self.parent = parent
         self.invoice_id_raw = parent.from_iso.get_invoice_id()
+
+    def is_allowed(self):
+        bank_name = self.parent.conf['name']
+        if bank_name not in host: 
+            return self.parent.ack_not_allowed() 
+        tp_conf = host[bank_name]
+        if 'ids' in tp_conf:
+            bank_id = self.parent.from_iso.get_bank_id()
+            if bank_id not in tp_conf['ids']:
+                return self.parent.ack_not_allowed() 
+            tp_conf['id'] = bank_id
+        self.parent.conf.update(tp_conf)
+        return True
 
     def is_transaction_owner(self, iso_pay):
         conf = host[self.parent.conf['name']]
@@ -84,6 +97,8 @@ class Inquiry(object):
             'kelurahan op': kel.kelurahannm,
             'kecamatan op': kec.kecamatannm,
             'kode pos wp': wp.kodepos,
+            'masa pajak': ' s.d '.join([invoice.masadari.strftime('%d-%m-%Y'),
+                                        invoice.masasd.strftime('%d-%m-%Y')]),
             })
         self.set_jatuh_tempo()
         self.set_invoice_profile_to_parent()
@@ -156,8 +171,8 @@ class Payment(Inquiry):
             return
         self.create_payment()
         self.commit()
-        #detik = 40
-        #self.parent.log_info('Tunggu {d} detik, BTN uji reversal.'.format(
+        #detik = 120
+        #self.parent.log_info('Tunggu {d} detik, BTN uji payment timeout.'.format(
         #    d=detik))
         #sleep(detik)
 
@@ -273,7 +288,10 @@ class ReversalResponse(BaseResponse):
             return self.parent.ack_payment_owner()
         self.rev.set_unpaid()
         self.commit()
-
+        #detik = 120
+        #self.parent.log_info('Tunggu {d} detik, BTN uji reversal timeout.'.format(
+        #    d=detik))
+        #sleep(detik)
 
 def reversal(parent):
     rev = ReversalResponse(parent)
