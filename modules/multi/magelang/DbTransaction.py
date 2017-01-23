@@ -1,11 +1,18 @@
 from tools import FixLength
+from common.transaction import BaseTransaction
 from ..transaction import Transaction
+from ..structure import (
+    ERR_ALREADY_PAID,
+    ERR_NOT_AVAILABLE,
+    )
 from structure import (
     TRANSACTION_BITS,
     INQUIRY_CODE,
     PAYMENT_CODE,
     INVOICE_PROFILE,
     ERR_INVALID_LENGTH,
+    RC_ALREADY_PAID,
+    RC_NOT_AVAILABLE,
     )
 import bphtb
 import padl
@@ -96,7 +103,7 @@ class DbTransaction(Transaction):
 
     # Override
     def is_reversal_request(self):
-        ok = Transaction.is_reversal_request(self)
+        ok = BaseTransaction.is_reversal_request(self)
         if not ok:
             return
         jenis_pajak = self.jenis_pajak()
@@ -144,3 +151,15 @@ class DbTransaction(Transaction):
     def ack_invalid_length(self):
         msg = ERR_INVALID_LENGTH.format(id=self.invoice_id_raw)
         self.ack(RC_INVALID_NUMBER, msg)
+
+    # Override
+    def ack_already_paid(self):
+        msg = ERR_ALREADY_PAID.format(
+                invoice_id=self.from_iso.get_invoice_id())
+        self.ack(RC_ALREADY_PAID, msg)
+
+    # Override
+    def ack_not_available(self):
+        msg = ERR_NOT_AVAILABLE.format(
+                invoice_id=self.from_iso.get_invoice_id())
+        self.ack(RC_NOT_AVAILABLE, msg)
