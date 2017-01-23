@@ -10,7 +10,8 @@ from multi.BogorKota.padl import (
 
 class InquiryResponse(BaseInquiryResponse):
     def init_invoice_profile(self):
-        self.parent.invoice_profile['Jenis Pajak'] = \
+        self.invoice_profile = self.parent.invoice_profile
+        self.invoice_profile['Jenis Pajak'] = \
             'PENDAPATAN ASLI DAERAH LAINNYA'
 
     def set_invoice_profile(self):
@@ -31,7 +32,9 @@ class InquiryResponse(BaseInquiryResponse):
             'Jenis Pajak': ' '.join([re.sub('[^0-9]', '', rek.rekeningkd),
                 rek.rekeningnm]),
             'Masa Pajak': ' s.d '.join([invoice.masadari.strftime('%d-%m-%Y'),
-                invoice.masasd.strftime('%d-%m-%Y')])
+                invoice.masasd.strftime('%d-%m-%Y')]),
+            'Tagihan Pokok': self.calc.tagihan,
+            'Denda': self.calc.denda,
             })
         self.parent.set_invoice_profile()
  

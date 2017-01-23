@@ -20,7 +20,7 @@ def inquiry_request(iso, module_name, invoice_id, bank_id):
             15: kini.strftime('%m%d'),
             18: '6010',
             37: kini.strftime('%H%M%S'),
-            41: 'W001DS58',
+            41: 'W001DS58  ',
             48: kode_wilayah + invoice_id_by_teller.rjust(22)}
     for bit in data:
         value = data[bit]

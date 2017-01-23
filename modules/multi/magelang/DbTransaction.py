@@ -1,6 +1,7 @@
 from tools import FixLength
 from ..transaction import Transaction
 from structure import (
+    TRANSACTION_BITS,
     INQUIRY_CODE,
     PAYMENT_CODE,
     INVOICE_PROFILE,
@@ -16,7 +17,7 @@ class DbTransaction(Transaction):
         Transaction.__init__(self, *args, **kwargs)
 
     # Override
-    def get_bit_definitions(self):
+    def get_bit_definition(self):
         return TRANSACTION_BITS
 
     # Override
@@ -77,7 +78,7 @@ class DbTransaction(Transaction):
         return self.get_value(48)
 
     # Override
-    def set_invoice_profile(self):
+    def set_invoice_profile(self, raw=None):
         raw = self.invoice_profile.get_raw()
         self.setBit(48, raw)
 
@@ -96,8 +97,8 @@ class DbTransaction(Transaction):
     # Override
     def is_reversal_request(self):
         ok = Transaction.is_reversal_request(self)
-        if ok:
-            return ok
+        if not ok:
+            return
         jenis_pajak = self.jenis_pajak()
         if jenis_pajak:
             return '{j}_reversal_request_handler'.format(j=jenis_pajak)
