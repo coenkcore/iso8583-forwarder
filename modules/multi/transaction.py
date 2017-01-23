@@ -69,29 +69,43 @@ class Transaction(BaseTransaction):
         elif self.from_iso.is_reversal_request():
             self.set_reversal_response()
 
+    def get_inquiry_codes(self):
+        return INQUIRY_CODES
+
+    def get_payment_codes(self):
+        return PAYMENT_CODES
+
+    def get_methods(self):
+        return METHODS
+
+    def get_reversal_methods(self):
+        return REVERSAL_METHODS
+
     def is_inquiry_request(self):
         if not self.is_transaction_request():
             return
         code = self.get_transaction_code()
-        if code not in INQUIRY_CODES:
+        if code not in self.get_inquiry_codes():
             return
-        if code in METHODS:
-            return METHODS[code]
+        methods = self.get_methods()
+        if code in methods: 
+            return methods[code]
 
     def is_inquiry_response(self):
-        return self.get_transaction_code() in INQUIRY_CODES
+        return self.get_transaction_code() in self.get_inquiry_codes()
 
     def is_payment_request(self):
         if not self.is_transaction_request():
             return
         code = self.get_transaction_code()
-        if code not in PAYMENT_CODES:
+        if code not in self.get_payment_codes():
             return
-        if code in METHODS:
-            return METHODS[code]
+        methods = self.get_methods()
+        if code in methods: 
+            return methods[code]
 
     def is_payment_response(self):
-        return self.get_transaction_code() in PAYMENT_CODES
+        return self.get_transaction_code() in self.get_payment_codes()
 
     def set_transaction_response(self):
         BaseTransaction.set_transaction_response(self)
@@ -106,8 +120,9 @@ class Transaction(BaseTransaction):
         if not BaseTransaction.is_reversal_request(self):
             return
         code = self.get_transaction_code()
-        if code in METHODS:
-            return REVERSAL_METHODS[code]
+        methods = self.get_reversal_methods()
+        if code in methods: 
+            return methods[code]
 
     def get_invoice_id(self):
         return self.get_value(61).strip().lstrip('0')

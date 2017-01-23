@@ -119,10 +119,22 @@ class InquiryResponse(BaseResponse):
 
     def ack_already_paid(self):
         pay = self.calc.invoice2payment()
+        ntp = ''
         if pay and self.is_transaction_owner(pay):
-            ntp = pay.id
-        else:
-            ntp = ''
+            calc = self.calc
+            q = DBSession.query(models.Payment).filter_by(
+                    propinsi=calc.propinsi,
+                    kabupaten=calc.kabupaten,
+                    kecamatan=calc.kecamatan,
+                    kelurahan=calc.kelurahan,
+                    blok=calc.blok,
+                    urut=calc.urut,
+                    jenis=calc.jenis,
+                    tahun=calc.tahun).order_by(
+                    models.Payment.ke.desc())
+            iso_pay = q.first()
+            if iso_pay:
+                ntp = iso_pay.id
         self.parent.set_ntp(ntp)
         return self.parent.ack_already_paid()
 

@@ -13,34 +13,35 @@ from sqlalchemy import (
 
 
 class Models(object):
-    def __init__(self, Base, db_schema):
+    def __init__(self, Base, transaction_schema, area_schema):
         class Kecamatan(Base):
             __tablename__ = 'ref_kecamatan'
-            __table_args__ = dict(autoload=True) 
+            __table_args__ = dict(autoload=True, schema=area_schema) 
         self.Kecamatan = Kecamatan
 
         class Kelurahan(Base):
             __tablename__ = 'ref_kelurahan'
-            __table_args__ = dict(autoload=True) 
+            __table_args__ = dict(autoload=True, schema=area_schema) 
         self.Kelurahan = Kelurahan
 
         class Customer(Base):
             __tablename__ = 'bphtb_ppat'
-            __table_args__ = dict(autoload=True, schema=db_schema) 
+            __table_args__ = dict(autoload=True, schema=transaction_schema)
         self.Customer = Customer
 
         class Invoice(Base):
             __tablename__ = 'bphtb_sspd'
-            __table_args__ = dict(autoload=True, schema=db_schema) 
+            __table_args__ = dict(autoload=True, schema=transaction_schema)
         self.Invoice = Invoice
 
         class Payment(Base):
             __tablename__ = 'bphtb_bank'
-            __table_args__ = dict(autoload=True, schema=db_schema) 
+            __table_args__ = dict(autoload=True, schema=transaction_schema)
         self.Payment = Payment
 
         class IsoPayment(Base, CommonModel):
             __tablename__ = 'bphtb_payment'
+            __table_args__ = dict(schema=transaction_schema)
             id = Column(Integer, ForeignKey('bphtb.bphtb_bank.id'), primary_key=True)
             tgl = Column(DateTime(timezone=True),
                          nullable=False,
@@ -63,6 +64,7 @@ class Models(object):
 
         class IsoReversal(Base, CommonModel):
             __tablename__ = 'bphtb_reversal'
+            __table_args__ = dict(schema=transaction_schema)
             id = Column(Integer, ForeignKey('bphtb_payment.id'), primary_key=True)
             tgl = Column(DateTime(timezone=True),
                          nullable=False,

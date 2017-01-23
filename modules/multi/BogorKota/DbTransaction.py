@@ -1,5 +1,9 @@
+import os
 from ..transaction import Transaction
-import pbb
+pbb_conf_file = os.path.join(os.getcwd(), 'modules', 'multi', 'BogorKota',
+    'pbb', 'conf.py')
+if os.path.exists(pbb_conf_file):
+    import pbb
 import bphtb
 import padl
 
@@ -14,8 +18,6 @@ class DbTransaction(Transaction):
 
     # Override
     def pbb_payment_request_handler(self):
-        #pbb.payment(self)
-        #raise Exception('BTN uji reversal') #FIXME
         try:
             pbb.payment(self)
         except:
@@ -30,8 +32,6 @@ class DbTransaction(Transaction):
 
     # Override
     def bphtb_payment_request_handler(self):
-        #bphtb.payment(self)
-        #raise Exception('BTN uji reversal') #FIXME
         try:
             bphtb.payment(self)
         except:
@@ -46,8 +46,6 @@ class DbTransaction(Transaction):
 
     # Override
     def padl_payment_request_handler(self):
-        #padl.payment(self)
-        #raise Exception('BTN uji reversal') #FIXME
         try:
             padl.payment(self)
         except:

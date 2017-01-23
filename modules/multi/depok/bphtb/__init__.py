@@ -221,7 +221,6 @@ class Payment(Inquiry):
         from_iso = self.parent.from_iso
         pay_id = models.iso_payment_seq.execute(engine)
         ke = self.calc.get_pay_seq()
-        print('*** DEBUG ke {k}'.format(k=ke))
         pay = models.Payment()
         pay.id = pay_id
         pay.ntp = ntp

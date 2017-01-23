@@ -7,7 +7,6 @@ from tools import (
     )
 from common.pbb.structure import NOP
 from sismiop.tools import hitung_denda
-from structure import INVOICE_ID
 from conf import persen_denda
 
 
@@ -40,11 +39,9 @@ class NTP(DbTransactionID):
 
 
 class Invoice(Query):
-    def __init__(self, models, DBSession, invoice_id_raw):
+    def __init__(self, models, DBSession, invoice_id):
         Query.__init__(self, models, DBSession)
-        self.invoice_id_raw = invoice_id_raw
-        self.invoice_id = FixLength(INVOICE_ID)
-        self.invoice_id.set_raw(invoice_id_raw)
+        self.invoice_id = invoice_id 
         self.invoice = False 
         try:
             kode = int(self.invoice_id['Kode'])
@@ -64,8 +61,8 @@ class Invoice(Query):
 
 
 class CalculateInvoice(Invoice):
-    def __init__(self, models, DBSession, invoice_id_raw, persen_denda):
-        Invoice.__init__(self, models, DBSession, invoice_id_raw)
+    def __init__(self, models, DBSession, invoice_id, persen_denda):
+        Invoice.__init__(self, models, DBSession, invoice_id)
         if not self.invoice:
             return
         self.persen_denda = persen_denda

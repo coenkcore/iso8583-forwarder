@@ -5,9 +5,10 @@ from structure import (
     PADL_PAYMENT_CODE,
     )
 from test_inquiry import (
-    Inquiry,
     DbTransaction,
     TestInquiry,
+    test_not_found,
+    area_module,
     )
 
 
@@ -17,16 +18,20 @@ PAYMENT_CODES = dict(
     padl=PADL_PAYMENT_CODE)
 
 
-class Payment(Inquiry):
-    def payment_request(self, module_name, inq_resp_iso, bank_id):
-        payment_code = PAYMENT_CODES[module_name]
-        self.inquiry_request(module_name, inq_resp_iso.get_invoice_id(),
-            bank_id)
-        self.set_transaction_code(payment_code)
-        self.set_amount(inq_resp_iso.get_amount())
-        ntb = datetime.now().strftime('%Y%m%d%H%M%S')
-        self.set_ntb(ntb)
-        self.copy([62], inq_resp_iso)
+def default_payment_request(iso, module_name, inq_resp_iso, bank_id):
+    payment_code = PAYMENT_CODES[module_name]
+    iso.set_transaction_code(payment_code)
+    iso.set_amount(inq_resp_iso.get_amount())
+    ntb = datetime.now().strftime('%Y%m%d%H%M%S')
+    iso.set_ntb(ntb)
+    iso.copy([4, 12, 13, 15, 18, 37, 47, 49, 59, 60, 61, 62, 63, 102, 107],
+        inq_resp_iso)
+
+
+if test_not_found:
+    payment_request = default_payment_request
+else:
+    payment_request = area_module.test.payment_request
 
 
 class TestPayment(TestInquiry):
@@ -35,8 +40,9 @@ class TestPayment(TestInquiry):
         if not resp_iso.is_ok_response():
             return resp_iso, None
         print('Bank kirim payment request')
-        req_iso = Payment()
-        req_iso.payment_request(self.module_name, resp_iso, self.conf['bank_id'])
+        req_iso = DbTransaction()
+        req_iso.set_transaction_request()
+        payment_request(req_iso, self.module_name, resp_iso, self.conf['bank_id'])
         raw = self.get_raw(req_iso)
         print('Pemda terima payment request')
         from_iso = DbTransaction()

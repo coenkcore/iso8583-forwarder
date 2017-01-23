@@ -252,6 +252,13 @@ class FixLength(object):
         for name in d:
             value = d[name]
             self.set(name, value)
+
+    def to_dict(self):
+        d = dict()
+        for name in self.fields:
+            value = self.fields[name]['value']
+            d[name] = value
+        return d
             
 
 ###########

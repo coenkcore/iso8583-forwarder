@@ -19,7 +19,8 @@ from query import (
 from structure import INVOICE_ID
 from conf import (
     db_url,
-    db_schema,
+    transaction_schema,
+    area_schema,
     db_pool_size,
     db_max_overflow,
     persen_denda,
@@ -34,7 +35,7 @@ Base.metadata.bind = engine
 session_factory = sessionmaker()
 DBSession = scoped_session(session_factory)
 DBSession.configure(bind=engine)
-models = Models(Base, db_schema)
+models = Models(Base, transaction_schema, area_schema)
 query = Query(models, DBSession)
 
 
@@ -42,6 +43,11 @@ class BaseResponse(object):
     def __init__(self, parent):
         self.parent = parent
         self.invoice_id_raw = parent.from_iso.get_invoice_id()
+        self.invoice_id = FixLength(self.get_invoice_id_structure())
+        self.invoice_id.set_raw(self.invoice_id_raw)
+
+    def get_invoice_id_structure(self):
+        return INVOICE_ID
 
     def is_transaction_owner(self, iso_pay):
         conf = host[self.parent.conf['name']]
@@ -53,16 +59,22 @@ class BaseResponse(object):
 
 
 
-class Inquiry(object):
+class InquiryResponse(BaseResponse):
     def __init__(self, parent):
-        self.parent = parent
-        self.calc = CalculateInvoice(models, DBSession,
-                        parent.from_iso.get_invoice_id(), persen_denda)
+        BaseResponse.__init__(self, parent)
+        self.calc = CalculateInvoice(models, DBSession, self.invoice_id,
+                        persen_denda)
         module_conf = host[self.parent.conf['name']]
         self.parent.conf.update(module_conf)
+        self.invoice_profile = FixLength(self.get_invoice_profile_structure())
+
+    def get_invoice_id_structure(self):
+        return INVOICE_ID
+
+    def get_invoice_profile_structure(self):
+        return INVOICE_PROFILE
 
     def init_invoice_profile(self):
-        self.invoice_profile = FixLength(INVOICE_PROFILE)
         self.invoice_profile.from_dict({
             'kode pajak': 'BPHTB', 
             'nama pajak': 'BEA PEROLEHAN HAK ATAS TANAH DAN BANGUNAN',
@@ -159,7 +171,7 @@ class Inquiry(object):
 
 
 def inquiry(parent):
-    inq = Inquiry(parent)
+    inq = InquiryResponse(parent)
     inq.response()
 
 
@@ -171,7 +183,7 @@ def create_ntp():
     return ntp.create()
 
 
-class Payment(Inquiry):
+class PaymentResponse(InquiryResponse):
     def response(self):
         if not self.is_valid():
             return
@@ -183,7 +195,7 @@ class Payment(Inquiry):
 
     # Override
     def is_valid(self):
-        if not Inquiry.is_valid(self, False):
+        if not InquiryResponse.is_valid(self, False):
             return
         if self.calc.total != self.parent.from_iso.get_amount():
             return self.parent.ack_insufficient_fund(self.calc.total)
@@ -269,13 +281,9 @@ class Payment(Inquiry):
         DBSession.add(iso_pay)
         DBSession.flush()
 
-    def commit(self):
-        DBSession.commit()
-        self.parent.ack()
-
 
 def payment(parent):
-    pay = Payment(parent)
+    pay = PaymentResponse(parent)
     pay.response()
 
 
@@ -285,7 +293,7 @@ def payment(parent):
 class ReversalResponse(BaseResponse):
     def __init__(self, parent):
         BaseResponse.__init__(self, parent)
-        self.rev = Reversal(models, DBSession, self.invoice_id_raw)
+        self.rev = Reversal(models, DBSession, self.invoice_id)
 
     def response(self):
         if not self.rev.invoice:

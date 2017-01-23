@@ -15,52 +15,49 @@ INQUIRY_CODES = dict(
     bphtb=BPHTB_INQUIRY_CODE,
     padl=PADL_INQUIRY_CODE)
 
-name = '.'.join(['multi', conf.module_name])
-module = __import__(name)
+
+def default_inquiry_request(iso, module_name, invoice_id, bank_id):
+    inquiry_code = INQUIRY_CODES[module_name]
+    kini = datetime.now()
+    iso.setBit(2, kini.strftime('%Y%m%d%H%M%S')) 
+    iso.set_transaction_code(inquiry_code) 
+    iso.setBit(12, kini.strftime('%H%M%S')) 
+    iso.setBit(13, kini.strftime('%m%d')) 
+    iso.setBit(15, kini.strftime('%m%d')) 
+    iso.setBit(18, '6010') 
+    iso.setBit(22, '021')
+    iso.setBit(32, bank_id)
+    iso.setBit(33, '00110')
+    iso.setBit(35, '')
+    iso.setBit(37, kini.strftime('%H%M%S')) 
+    iso.setBit(41, '000')
+    iso.setBit(42, '000000000000000')
+    iso.setBit(43, 'Nama Bank')
+    iso.setBit(49, '390')
+    iso.setBit(59, 'PAY')
+    iso.setBit(60, '142')
+    iso.setBit(61, invoice_id)
+    iso.setBit(63, '')
+    iso.setBit(102, '')
+    iso.setBit(107, '')
+ 
+test_not_found = False
+name = '.'.join(['multi', conf.module_name, 'test'])
+try:
+    module = __import__(name)
+except ImportError, test_not_found:
+    name = '.'.join(['multi', conf.module_name])
+    module = __import__(name)
 area_module = getattr(module, conf.module_name)
 DbTransaction = area_module.DbTransaction
 
-
-class Inquiry(DbTransaction):
-    def inquiry_request(self, module_name, invoice_id, bank_id):
-        inquiry_code = INQUIRY_CODES[module_name]
-        self.set_transaction_request()
-        kini = datetime.now()
-        self.setBit(2, kini.strftime('%Y%m%d%H%M%S')) 
-        self.set_transaction_code(inquiry_code) 
-        self.setBit(12, kini.strftime('%H%M%S')) 
-        self.setBit(13, kini.strftime('%m%d')) 
-        self.setBit(15, kini.strftime('%m%d')) 
-        self.setBit(18, '6010') 
-        self.setBit(22, '021')
-        self.setBit(32, bank_id)
-        self.setBit(33, '00110')
-        self.setBit(35, '')
-        self.setBit(37, kini.strftime('%H%M%S')) 
-        self.setBit(41, '000')
-        self.setBit(42, '000000000000000')
-        self.setBit(43, 'Nama Bank')
-        self.setBit(49, '390')
-        self.setBit(59, 'PAY')
-        self.setBit(60, '142')
-        self.setBit(61, invoice_id)
-        self.setBit(63, '')
-        self.setBit(102, '')
-        self.setBit(107, '')
+if test_not_found:
+    inquiry_request = default_inquiry_request
+else:
+    inquiry_request = area_module.test.inquiry_request
 
 
-class Test(object):
-    def get_raw(self, iso):
-        msg = 'MTI {mti}'.format(mti=iso.getMTI())
-        print(msg)
-        pprint(iso.getBitsAndValues())
-        raw = iso.getRawIso()
-        sleep(1)
-        print([raw])
-        return raw
-
-
-class TestInquiry(Test):
+class TestInquiry(object):
     def __init__(self, argv):
         self.option = get_option(argv)
         if not self.option:
@@ -74,8 +71,9 @@ class TestInquiry(Test):
         if not self.option:
             return
         print('Bank kirim inquiry request')
-        req_iso = Inquiry()
-        req_iso.inquiry_request(self.module_name, self.invoice_id,
+        req_iso = DbTransaction()
+        req_iso.set_transaction_request()
+        inquiry_request(req_iso, self.module_name, self.invoice_id,
             self.conf['bank_id'])
         raw = self.get_raw(req_iso)
         print('Pemda terima inquiry request')
@@ -87,6 +85,15 @@ class TestInquiry(Test):
         func()
         self.get_raw(resp_iso)
         return resp_iso # Untuk test_payment.py
+
+    def get_raw(self, iso):
+        msg = 'MTI {mti}'.format(mti=iso.getMTI())
+        print(msg)
+        pprint(iso.getBitsAndValues())
+        raw = iso.getRawIso()
+        sleep(1)
+        print([raw])
+        return raw
 
 
 def get_option(argv):
@@ -114,14 +121,6 @@ def split_bank(s):
         streamer_name = s 
         bank_id = 0 
     return streamer_name, bank_id
-
-class MainProcess(object):
-    def __init__(self, argv):
-        self.option = get_option(argv)
-        if not self.option:
-            return
-        streamer_name, bank_id = split_bank(self.option.bank)
-        self.conf = dict(name=streamer_name, ip='127.0.0.1', bank_id=bank_id)
 
 def main(argv):
     test = TestInquiry(argv)

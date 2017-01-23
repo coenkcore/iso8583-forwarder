@@ -50,8 +50,9 @@ class BaseResponse(object):
 
 
 
-class Inquiry(object):
+class InquiryResponse(BaseResponse):
     def __init__(self, parent):
+        BaseResponse.__init__(self, parent)
         self.parent = parent
         self.calc = CalculateInvoice(models, DBSession,
                         parent.from_iso.get_invoice_id(), persen_denda)
@@ -137,7 +138,7 @@ class Inquiry(object):
 
 
 def inquiry(parent):
-    inq = Inquiry(parent)
+    inq = InquiryResponse(parent)
     inq.response()
 
 
@@ -149,7 +150,7 @@ def create_ntp():
     return ntp.create()
 
 
-class Payment(Inquiry):
+class PaymentResponse(InquiryResponse):
     def response(self):
         if not self.is_valid():
             return
@@ -158,7 +159,7 @@ class Payment(Inquiry):
 
     # Override
     def is_valid(self):
-        if not Inquiry.is_valid(self, False):
+        if not InquiryResponse.is_valid(self, False):
             return
         if self.calc.total != self.parent.from_iso.get_amount():
             return self.parent.ack_insufficient_fund(self.calc.total)
@@ -199,13 +200,9 @@ class Payment(Inquiry):
         DBSession.flush()
         self.parent.set_ntp(ntp)
 
-    def commit(self):
-        DBSession.commit()
-        self.parent.ack()
-
 
 def payment(parent):
-    pay = Payment(parent)
+    pay = PaymentResponse(parent)
     pay.response()
 
 
@@ -236,5 +233,3 @@ class ReversalResponse(BaseResponse):
 def reversal(parent):
     rev = ReversalResponse(parent)
     rev.response()
-
-
