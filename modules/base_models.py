@@ -7,7 +7,10 @@ from sqlalchemy import (
     func,
     Column,
     Integer,
-    DateTime
+    DateTime,
+    String,
+    Boolean,
+    Text,
     )
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import (
@@ -77,19 +80,53 @@ class BaseModel(CommonModel):
     id = Column(Integer, nullable=False, primary_key=True)
 
 
-class HistoryModel(BaseModel):
+class LogModel(BaseModel):
     created = Column(DateTime(timezone=True),
                      nullable=False,
-                     default=datetime.utcnow)
+                     default=create_now)
+
+
+class IsoModel(LogModel):
+    # Nama bank (bjb, btn) atau forwarder (mitracomm)
+    forwarder = Column(String(16), nullable=False, default='bjb')
+    ip = Column(String(15), nullable=False, default='10.31.224.200')
+    mti = Column(String(4), nullable=False, default='0200')
+    is_request = Column(Boolean, nullable=False, default=True)
+    raw = Column(Text, nullable=False)
+    request_id = Column(Integer) # foreign key ke diri sendiri
+    bit002 = Column(Text)
+    bit003 = Column(Text)
+    bit004 = Column(Text)
+    bit007 = Column(Text)
+    bit011 = Column(Text)
+    bit012 = Column(Text)
+    bit013 = Column(Text)
+    bit015 = Column(Text)
+    bit018 = Column(Text)
+    bit022 = Column(Text)
+    bit032 = Column(Text)
+    bit033 = Column(Text)
+    bit035 = Column(Text)
+    bit037 = Column(Text)
+    bit038 = Column(Text)
+    bit039 = Column(Text)
+    bit041 = Column(Text)
+    bit042 = Column(Text)
+    bit043 = Column(Text)
+
+            
+class HistoryModel(LogModel):
     updated = Column(DateTime(timezone=True),
                      nullable=False,
-                     default=datetime.utcnow)
+                     default=create_now)
 
     def save(self):
         self.updated = create_now()
         if not self.id:
             self.created = self.updated
-            
+
+
+
             
 def create_schema(engine, schema):
     from sqlalchemy.schema import CreateSchema

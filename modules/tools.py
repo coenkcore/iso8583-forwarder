@@ -10,6 +10,7 @@ from types import (
     LongType,
     )
 from StringIO import StringIO
+from sqlalchemy import PrimaryKeyConstraint
 import traceback
 import re
 import demon
@@ -18,6 +19,9 @@ import os
 import signal
 import pytz
 import locale
+import csv
+
+
 locale.setlocale(locale.LC_ALL, 'id_ID.UTF-8') 
 
 
@@ -108,6 +112,40 @@ def trigger_name(sql):
     sql = sql.lower().replace('\n', ' ')
     match = re.compile('trigger (.*) (after|before)').search(sql)
     return match and match.group(1)
+
+def get_pkeys(table):
+    r = []
+    for c in table.constraints:
+        if c.__class__ is PrimaryKeyConstraint:
+            for col in c:
+                r.append(col.name)
+            return r
+    return r
+
+
+class FromCSV(object):
+    def __init__(self, Base, DBSession):
+        self.Base = Base
+        self.DBSession = DBSession
+
+    def restore(self, filename, table):
+        keys = get_pkeys(table.__table__)
+        f = open(filename)
+        reader = csv.DictReader(f)
+        for source in reader:
+            filter_ = {}
+            for key in keys:
+                filter_[key] = source[key]
+            q = self.DBSession.query(table).filter_by(**filter_)
+            if q.first():
+                continue
+            row = table()
+            row.from_dict(source)
+            self.DBSession.add(row)
+            self.DBSession.flush()
+        f.close()
+        self.DBSession.commit()
+
 
 #########################
 # Nomor Transaksi Pemda #
