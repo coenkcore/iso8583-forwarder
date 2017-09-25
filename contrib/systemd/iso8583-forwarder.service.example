@@ -1,14 +1,12 @@
 [Unit]
 Description=ISO8583 Forwarder
+After=postgresql.service
 
 [Service]
-Type=forking
-PIDFile=/home/sugiana/tmp/iso8583-forwarder.pid
-ExecStart=/sbin/start-stop-daemon --background \
-    --pidfile /home/sugiana/tmp/iso8583-forwarder.pid \
-    --exec /usr/local/bin/iso8583-forwarder \
-    --start --quiet
-ExecStop=/usr/local/bin/iso8583-forwarder --stop
+Type=simple
+User=h2h
+ExecStart=/home/h2h/bin/start
+ExecStop=/home/h2h/bin/stop
 Restart=on-abort
 
 [Install]

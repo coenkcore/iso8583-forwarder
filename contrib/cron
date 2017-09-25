@@ -1,0 +1,2 @@
+MAILTO=""
+*/2 * * * * root cd /home/h2h/bin && sh monitor.sh
