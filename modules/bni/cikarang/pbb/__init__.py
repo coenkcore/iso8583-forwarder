@@ -75,16 +75,15 @@ class InquiryResponse(BaseResponse):
             self.invoice_id['Jenis'], self.invoice_id['Tahun Pajak'])
 
     def set_invoice_profile(self):
-        inv = self.calc.invoice
         self.parent.set_amount(self.calc.total)
-        self.invoice_profile.from_dict({
-            'Nama Wajib Pajak': inv.nm_wp_sppt,
-            'Tagihan Pokok': self.calc.tagihan,
-            'Denda': self.calc.denda,
-            'Total Tagihan': self.calc.total})
         self.set_invoice_profile_to_parent()
 
     def set_invoice_profile_to_parent(self):
+        self.invoice_profile.from_dict({
+            'Nama Wajib Pajak': self.calc.invoice.nm_wp_sppt,
+            'Tagihan Pokok': self.calc.tagihan,
+            'Denda': self.calc.denda,
+            'Total Tagihan': self.calc.total})
         self.parent.set_invoice_profile(self.invoice_profile.get_raw())
 
     def is_valid(self, is_need_invoice_profile=True):
@@ -118,8 +117,11 @@ class InquiryResponse(BaseResponse):
             iso_pay = q.first()
             if iso_pay:
                 ntp = iso_pay.id
-        self.parent.set_ntp(ntp)
+        self.set_ntp(ntp)
         return self.parent.ack_already_paid()
+
+    def set_ntp(self, ntp):
+        self.invoice_profile.from_dict({'NTP': ntp})
 
     def response(self):
         if not self.is_valid():
@@ -151,6 +153,8 @@ class PaymentResponse(InquiryResponse):
         if not inq:
             return self.parent.ack_inquiry_not_found()
         self.create_payment(inq)
+        self.set_invoice_profile_to_parent()
+        print('*** DEBUG invoice profile {s}'.format(s=self.invoice_profile.to_dict()))
         self.commit()
 
     def create_payment(self, inq):
@@ -181,7 +185,7 @@ class PaymentResponse(InquiryResponse):
         iso_pay.iso_request = self.parent.from_iso.raw
         DBSession.add(iso_pay)
         DBSession.flush()
-        self.parent.set_ntp(ntp)
+        self.set_ntp(ntp)
 
     def sismiop_create_payment(self, inq):
         bank_fields = dict()
