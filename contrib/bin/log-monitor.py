@@ -7,10 +7,7 @@
 import os
 import sys
 import re
-from datetime import (
-    datetime,
-    timedelta,
-    )
+from datetime import datetime
 from optparse import OptionParser
 from subprocess import call
 
@@ -48,10 +45,11 @@ y, m, d, hh, mm, ss = int(y), int(m), int(d), int(hh), int(mm), int(ss)
 log_time = datetime(y, m, d, hh, mm, ss)
 kini = datetime.now()
 usia_log = kini - log_time
+usia_log = usia_log.seconds
 print('Log : {t}'.format(t=log_time))
 print('Kini: {t}'.format(t=kini))
 print('Usia: {s} detik'.format(s=usia_log))
-if usia_log < timedelta(max_age/24/60/60):
+if usia_log < max_age:
     print('Usia log masih di bawah {n} detik, {e} tidak perlu dijalankan.'.\
             format(n=max_age, e=exe))
     sys.exit()

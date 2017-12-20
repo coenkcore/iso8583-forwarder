@@ -100,7 +100,6 @@ class Transaction(BaseTransaction):
     def set_payment_response(self):
         self.set_transaction_response()
         self.copy([4, 48, 62])
-        self.set_ntp('')
 
     def is_reversal_request(self):
         if not BaseTransaction.is_reversal_request(self):
@@ -131,9 +130,6 @@ class Transaction(BaseTransaction):
 
     def set_ntb(self, v):
         self.setBit(BIT_NTB, v)
-
-    def set_ntp(self, v):
-        self.setBit(47, v)
 
     def get_bank_code(self, fieldname):
         value = self.conf[fieldname]
