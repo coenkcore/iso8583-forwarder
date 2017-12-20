@@ -6,6 +6,7 @@ from structure import (
     PBB_INQUIRY_CODE,
     BPHTB_INQUIRY_CODE,
     PADL_INQUIRY_CODE,
+    WEBR_INQUIRY_CODE,
     )
 import conf
 
@@ -13,7 +14,8 @@ import conf
 INQUIRY_CODES = dict(
     pbb=PBB_INQUIRY_CODE,
     bphtb=BPHTB_INQUIRY_CODE,
-    padl=PADL_INQUIRY_CODE)
+    padl=PADL_INQUIRY_CODE,
+    webr=WEBR_INQUIRY_CODE)
 
 
 def default_inquiry_request(iso, module_name, invoice_id, bank_id):
@@ -106,6 +108,7 @@ def get_option(argv):
     pars.add_option('-m', '--module', default=module_name, help=help_module)
     pars.add_option('-i', '--invoice-id')
     pars.add_option('-b', '--bank', default=bank, help=help_bank)
+    pars.add_option('', '--debug', action='store_true')
     option, remain = pars.parse_args(argv)
     if not option.invoice_id:
         print('--invoice-id harus diisi.')

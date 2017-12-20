@@ -2,8 +2,10 @@ import os
 import sys
 import logging
 import random
-import commands
-from types import IntType 
+from subprocess import (
+    Popen,
+    PIPE,
+    )
 
 
 logformatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
@@ -21,7 +23,7 @@ def Log(name, file=None):
     
     
 def get_pid(pid):
-    if type(pid) == IntType:
+    if isinstance(pid, int):
         return pid
     try:
         f = open(pid,'r')
@@ -44,8 +46,13 @@ def isLive(pid):
     except OSError:
         return
     for i in range(3):
-        if commands.getoutput('ps ax | grep "^%s%d " | grep -v grep' % (
-            ' '*i, pid)):
+        p1 = Popen(['ps', 'ax'], stdout=PIPE)
+        p2 = Popen(['grep', '^%s%d' % (' ' * i, pid)], stdin=p1.stdout,
+                stdout=PIPE)
+        p3 = Popen(['grep', '-v', 'grep'], stdin=p2.stdout, stdout=PIPE)
+        s = p3.communicate()
+        s = s[0]
+        if s:
             return pid
 
 def make_pid(filename):

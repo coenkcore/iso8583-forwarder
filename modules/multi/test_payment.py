@@ -3,6 +3,7 @@ from structure import (
     PBB_PAYMENT_CODE,
     BPHTB_PAYMENT_CODE,
     PADL_PAYMENT_CODE,
+    WEBR_PAYMENT_CODE,
     )
 from test_inquiry import (
     DbTransaction,
@@ -15,7 +16,8 @@ from test_inquiry import (
 PAYMENT_CODES = dict(
     pbb=PBB_PAYMENT_CODE,
     bphtb=BPHTB_PAYMENT_CODE,
-    padl=PADL_PAYMENT_CODE)
+    padl=PADL_PAYMENT_CODE,
+    webr=WEBR_PAYMENT_CODE)
 
 
 def default_payment_request(iso, module_name, inq_resp_iso, bank_id):

@@ -10,6 +10,7 @@ def main(argv):
     pars.add_option('-m', '--module', default=module_name, help=help_module)
     pars.add_option('-i', '--invoice-id')
     pars.add_option('', '--force', action='store_true', help=help_force)
+    pars.add_option('', '--debug', action='store_true')
     option, remain = pars.parse_args(argv)
     module_name = option.module
     name = '.'.join(['multi', conf.module_name, module_name, 'ReversalByQuery'])

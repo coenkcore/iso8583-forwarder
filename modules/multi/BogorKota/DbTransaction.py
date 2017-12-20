@@ -1,11 +1,20 @@
 import os
 from ..transaction import Transaction
-pbb_conf_file = os.path.join(os.getcwd(), 'modules', 'multi', 'BogorKota',
-    'pbb', 'conf.py')
-if os.path.exists(pbb_conf_file):
+
+
+def is_conf_exists(name):
+    filename = os.path.join(
+                os.getcwd(), 'modules', 'multi', 'BogorKota', name, 'conf.py')
+    return os.path.exists(filename)
+
+if is_conf_exists('pbb'):
     import pbb
-import bphtb
-import padl
+if is_conf_exists('bphtb'):
+    import bphtb
+if is_conf_exists('padl'):
+    import padl
+if is_conf_exists('webr'):
+    import webr
 
 
 class DbTransaction(Transaction):
@@ -24,6 +33,13 @@ class DbTransaction(Transaction):
             self.ack_unknown()
 
     # Override
+    def pbb_reversal_request_handler(self):
+        try:
+            pbb.reversal(self)
+        except:
+            self.ack_unknown()
+
+    # Override
     def bphtb_inquiry_request_handler(self):
         try:
             bphtb.inquiry(self)
@@ -37,6 +53,13 @@ class DbTransaction(Transaction):
         except:
             self.ack_unknown()
 
+    # Override
+    def bphtb_reversal_request_handler(self):
+        try:
+            bphtb.reversal(self)
+        except:
+            self.ack_unknown()
+ 
     # Override
     def padl_inquiry_request_handler(self):
         try:
@@ -52,22 +75,29 @@ class DbTransaction(Transaction):
             self.ack_unknown()
 
     # Override
-    def pbb_reversal_request_handler(self):
-        try:
-            pbb.reversal(self)
-        except:
-            self.ack_unknown()
-
-    # Override
-    def bphtb_reversal_request_handler(self):
-        try:
-            bphtb.reversal(self)
-        except:
-            self.ack_unknown()
-
-    # Override
     def padl_reversal_request_handler(self):
         try:
             padl.reversal(self)
+        except:
+            self.ack_unknown()
+
+    # Override
+    def webr_inquiry_request_handler(self):
+        try:
+            webr.inquiry(self)
+        except:
+            self.ack_unknown()
+
+    # Override
+    def webr_payment_request_handler(self):
+        try:
+            webr.payment(self)
+        except:
+            self.ack_unknown()
+
+    # Override
+    def webr_reversal_request_handler(self):
+        try:
+            webr.reversal(self)
         except:
             self.ack_unknown()

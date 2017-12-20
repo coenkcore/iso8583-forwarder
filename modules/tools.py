@@ -1,15 +1,19 @@
 from datetime import datetime
-from urllib import unquote_plus
-from urlparse import urlparse
+from datetime import timedelta
+try:
+    from urllib import unquote_plus
+except ImportError:
+    from urllib.parse import unquote_plus
+try:
+    from urlparse import urlparse
+except ImportError:
+    from urllib.parse import urlparse
 from time import sleep
 from random import randrange
-from types import (
-    StringType,
-    UnicodeType,
-    IntType,
-    LongType,
-    )
-from StringIO import StringIO
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
 from sqlalchemy import PrimaryKeyConstraint
 import traceback
 import re
@@ -135,7 +139,11 @@ class FromCSV(object):
         for source in reader:
             filter_ = {}
             for key in keys:
-                filter_[key] = source[key]
+                if key in source:
+                    filter_[key] = source[key]
+                else:
+                    uniq = reader.fieldnames[0]
+                    filter_[uniq] = source[uniq]
             q = self.DBSession.query(table).filter_by(**filter_)
             if q.first():
                 continue
@@ -211,7 +219,8 @@ def clean(s):
 
 def to_str(s):
     s = s or ''
-    s = type(s) in [StringType, UnicodeType] and s or str(s)
+    if not (isinstance(s, str) or isinstance(s, unicode)):
+        s = str(s)
     return clean(s)
 
 def left(s, width):
@@ -263,7 +272,7 @@ class FixLength(object):
                 v = v or 0
                 try:
                     i = int(v)
-                except ValueError, e:
+                except ValueError as e:
                     raise Exception('Invalid {k} value: {v}. {e}'.format(
                         k=name, v=v, e=e.message))
                 if v == i:
@@ -308,7 +317,7 @@ def should_int(value):
 
 def thousand(value, float_count=None):
     if float_count is None: # autodetection
-        if type(value) in (IntType, LongType):
+        if isinstance(value, int) or isinstance(value, long):
             float_count = 0
         else:
             float_count = 2
@@ -343,6 +352,13 @@ if os.path.exists(timezone_file):
 else:
     timezone_name = 'Asia/Jakarta'
 
+# Beberapa zona ada yang kurang pas. Misalnya Jakarta menjadi +07:07, kelebihan
+# 7 menit.
+# https://stackoverflow.com/questions/24856643/unexpected-results-converting-timezones-in-python
+NORMALIZE_ZONES = {
+    'Asia/Jakarta': 7,
+    }
+
 def get_timezone():
     return pytz.timezone(timezone_name) 
 
@@ -355,9 +371,13 @@ def create_datetime(year, month, day,
                     hour=0, minute=7, second=0,
                     microsecond=0):
     tz = get_timezone()        
-    return datetime(year, month, day,
-                    hour, minute, second,
-                    microsecond, tzinfo=tz)
+    t = datetime(
+            year, month, day, hour, minute, second, microsecond, tzinfo=tz)
+    if tz.zone in NORMALIZE_ZONES:
+        minutes = NORMALIZE_ZONES[tz.zone]
+        t = t + timedelta(minutes=minutes)
+        return tz.normalize(t)
+    return t
 
 def create_date(year, month, day):    
     return create_datetime(year, month, day)
