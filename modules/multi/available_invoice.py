@@ -1,6 +1,6 @@
 import sys
 from optparse import OptionParser
-import conf
+from .conf import module_name as conf_module_name
 
 
 def main(argv):
@@ -9,10 +9,10 @@ def main(argv):
         return
     module_name = argv[0]
     argv = argv[1:]
-    name = '.'.join(['multi', conf.module_name, module_name,
+    name = '.'.join(['multi', conf_module_name, module_name,
             'AvailableInvoice'])
     module = __import__(name)
-    area_module = getattr(module, conf.module_name)
+    area_module = getattr(module, conf_module_name)
     sub_area_module = getattr(area_module, module_name)
     available_inv_module = getattr(sub_area_module, 'AvailableInvoice')
     AvailableInvoice = available_inv_module.AvailableInvoice

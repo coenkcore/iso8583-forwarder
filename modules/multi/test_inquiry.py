@@ -2,13 +2,13 @@ from datetime import datetime
 from pprint import pprint
 from time import sleep
 from optparse import OptionParser
-from structure import (
+from .structure import (
     PBB_INQUIRY_CODE,
     BPHTB_INQUIRY_CODE,
     PADL_INQUIRY_CODE,
     WEBR_INQUIRY_CODE,
     )
-import conf
+from .conf import module_name as conf_module_name
 
 
 INQUIRY_CODES = dict(
@@ -44,13 +44,14 @@ def default_inquiry_request(iso, module_name, invoice_id, bank_id):
     iso.setBit(107, '')
  
 test_not_found = False
-name = '.'.join(['multi', conf.module_name, 'test'])
+name = '.'.join(['multi', conf_module_name, 'test'])
 try:
     module = __import__(name)
-except ImportError, test_not_found:
-    name = '.'.join(['multi', conf.module_name])
+except ImportError as err:
+    test_not_found = err
+    name = '.'.join(['multi', conf_module_name])
     module = __import__(name)
-area_module = getattr(module, conf.module_name)
+area_module = getattr(module, conf_module_name)
 DbTransaction = area_module.DbTransaction
 
 if test_not_found:

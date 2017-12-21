@@ -1,0 +1,15 @@
+INVOICE_PROFILE = [
+    ('Kode', 16, 'A'),
+    ('Nama Penyetor', 35, 'A'),
+    ('Alamat 1', 40, 'A'),
+    ('Alamat 2', 40, 'A'),
+    ('Tagihan', 12, 'N'),
+    ('Denda', 12, 'N'),
+    ('Total', 12, 'N'),
+    ('Kode Rekening', 20, 'A'),
+    ('Nama Rekening', 40, 'A'),
+    ('Kode SKPD', 20, 'A'),
+    ('Nama SKPD',40, 'A'),
+    ('additional 1', 40,'A'),
+    ('Additional 2', 40,'A'),
+    ]

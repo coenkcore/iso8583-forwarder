@@ -1,8 +1,7 @@
-from types import DictType
 from tools import FixLength
 from network import Network
 from common.transaction import BaseTransaction
-from structure import (
+from .structure import (
     TRANSACTION_BITS,
     PBB_INQUIRY_CODE,
     PBB_PAYMENT_CODE,
@@ -141,7 +140,7 @@ class Transaction(BaseTransaction):
 
     def get_bank_code(self, fieldname):
         value = self.conf[fieldname]
-        if type(value) is not DictType:
+        if not isinstance(value, dict):
             return value
         channel = self.get_channel()
         if channel in value:

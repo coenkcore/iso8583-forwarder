@@ -1,5 +1,5 @@
 import network
-from conf import module_name
+from .conf import module_name
 
 
 name = 'multi.' + module_name

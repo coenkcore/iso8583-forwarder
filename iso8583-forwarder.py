@@ -3,7 +3,10 @@ import sys
 import traceback
 import imp
 import signal
-from StringIO import StringIO
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
 from datetime import datetime
 from threading import Thread
 from optparse import OptionParser
@@ -12,7 +15,7 @@ from time import (
     sleep,
     time,
     )
-sys.path.insert(0, 'modules')
+import pathmagic
 import demon
 from tcp import (
     Server,
@@ -28,6 +31,7 @@ from streamer_loader import get_streamer_module
 
 def join_ip_port(ip, port):
     return ':'.join([ip, str(port)])
+
 
 #################
 # Common Daemon #
@@ -47,14 +51,6 @@ class Common(object):
     def get_streamer(self):
         cls = self.get_conf_val('streamer')
         return cls()
-
-    #def get_iso_class(self):
-    #    module = self.get_conf_val('iso_module')
-    #    return module.DbTransaction 
-
-    #def create_iso(self, *args, **kwargs):
-    #    cls = self.get_iso_class()
-    #    return cls(*args, **kwargs)
 
     def log_message(self, s):
         cfg = self.get_conf()
@@ -79,13 +75,9 @@ class Common(object):
     def before_loop(self):
         if not self.connected_time:
             return
-        #self.echo_time = None
         self.job = self.create_job_instance()
         hosts.add(self)
         self.job.before_loop()
-        #if self.need_echo():
-        #    self.echo()
-        #self.sign_on_time = False
 
     def _process(self, raw):
         parser = ParserThread(self, raw)
@@ -94,7 +86,7 @@ class Common(object):
     def process(self, raw):
         try:
             self._process(raw)
-        except:
+        except Exception:
             f = StringIO()
             traceback.print_exc(file=f)
             self.log_error(f.getvalue())
@@ -107,36 +99,10 @@ class Common(object):
 
     def on_receive_raw(self, raw):
         self.job.on_receive_raw(raw)
-        #self.echo_time = None
-
-    #def echo(self):
-    #    self.echo_time = time()
-    #    iso = self.create_iso(log_info=self.log_info,
-    #            log_error=self.log_error)
-    #    iso.echo_test_request()
-    #    self.send_iso(iso)
-
-    #def sign_on(self):
-    #    iso = self.create_iso(log_info=self.log_info,
-    #               log_error=self.log_error)
-    #    iso.sign_on_request()
-    #    self.sign_on_time = time()
-    #    self.send_iso(iso)
 
     def get_timeout(self):
         cfg = self.get_conf()
-        return cfg.get('timeout', self.network_timeout) 
-
-    #def is_timeout(self):
-    #    return time() - self.connected_time >= self.get_timeout() - 5
-
-    #def need_echo(self):
-    #    cfg = self.get_conf()
-    #    return cfg.get('need echo', True)
-
-    #def check_timeout(self):
-    #    if not self.echo_time and self.is_timeout() and self.need_echo():
-    #        self.echo()
+        return cfg.get('timeout', self.network_timeout)
 
     def create_job_instance(self):
         module = self.get_conf_val('iso_module')
@@ -149,13 +115,13 @@ class Common(object):
     def send_iso(self, iso):
         raw = iso.getRawIso()
         raw = raw.upper()
-        raw = str(raw) # Jangan sampai unicode
+        raw = str(raw)  # Jangan sampai unicode
         streamer = self.get_streamer()
         raw = streamer.set(raw)
         func = self.get_send_func()
         try:
             return func(self, raw)
-        except:
+        except Exception:
             f = StringIO()
             traceback.print_exc(file=f)
             self.log_error(f.getvalue())
@@ -174,7 +140,7 @@ class AsServerThread(ServerThread):
 class AsServer(Server):
     # Override
     def is_allowed(self, ip):
-        return ip in allowed_ips 
+        return ip in allowed_ips
 
     # Override
     def get_log(self):
@@ -220,14 +186,12 @@ class Request(RequestHandler, Common):
     def get_timeout(self):
         return Common.get_timeout(self)
 
-    #def is_timeout(self):
-    #    return Common.is_timeout(self)
-
     def get_send_func(self):
         return RequestHandler.send
 
     def get_streamer(self):
         return Common.get_streamer(self)
+
 
 ##########################
 # Sebagai network client #
@@ -268,23 +232,22 @@ class Client(ClientThread, Common):
     def get_timeout(self):
         return Common.get_timeout(self)
 
-    #def is_timeout(self):
-    #    return Common.is_timeout(self)
-
     def get_send_func(self):
         return ClientThread.send
 
     def get_streamer(self):
         return Common.get_streamer(self)
 
+
 #########
 # Other #
 #########
 def out(sig=None, func=None):
     if running:
-        del running[0] # Akhiri loop utama
+        del running[0]  # Akhiri loop utama
     for host in hosts:
         host.close_connection('killed')
+
 
 def check_connection():
     for ip_port in ip_conf:
@@ -297,24 +260,27 @@ def check_connection():
         host.start()
         sleep(5)
 
+
 def check_timeout():
     for host in hosts:
         if host.running:
             host.check_timeout()
+
 
 def check_job():
     for host in hosts:
         if host.running:
             host.check_job()
 
+
 def stop_thread(stopped_name=None):
     for host in hosts:
         if stopped_name:
-            if stopped_name != host.conf['name']: 
+            if stopped_name != host.conf['name']:
                 continue
         host.log_info('admin try to close when not busy')
-        busy_timeout = host.get_timeout() # seconds
-        is_force = True # tutup paksa ?
+        busy_timeout = host.get_timeout()  # seconds
+        is_force = True  # tutup paksa ?
         awal = time()
         while time() - awal < busy_timeout:
             if not host.busy:
@@ -325,6 +291,7 @@ def stop_thread(stopped_name=None):
             host.close_connection('forcibly closed by admin')
         else:
             host.close_connection('closed by admin')
+
 
 def watch_stop_dir():
     pattern = os.path.join(stop_dir, '*')
@@ -337,7 +304,7 @@ def watch_stop_dir():
 
 class Host(object):
     def __init__(self):
-        self.hosts = {} 
+        self.hosts = {}
 
     def add(self, host):
         ip_port = join_ip_port(host.remote_host, host.port)
@@ -357,11 +324,11 @@ class Host(object):
         count = reconnect and 1 or 0
         host.log_info('closed, currently %d connections' % count)
 
-    def __iter__(self): # for loop
+    def __iter__(self):  # for loop
         for ip_port in self.hosts:
             yield self.hosts[ip_port]
 
-    def __contains__(self, ip_port): # in operator
+    def __contains__(self, ip_port):  # in operator
         return ip_port in self.hosts
 
     def __getitem__(self, ip_port):
@@ -396,8 +363,8 @@ class ParserThread(Thread, BaseDaemon, Common):
     # Override
     def log_message(self, s):
         name = self.get_conf_val('name')
-        return '%s %s %s -> %s %s' % (self.remote_host, name, id(self.parent),
-                    id(self), s)
+        return '%s %s %s -> %s %s' % (
+                self.remote_host, name, id(self.parent), id(self), s)
 
 
 ##############
@@ -408,9 +375,10 @@ pid_file = 'iso8583-forwarder.pid'
 log_dir = 'logs'
 
 pars = OptionParser()
-pars.add_option('-c', '--conf-file', default=conf_file, help='default ' + conf_file)
-pars.add_option('-p', '--pid-file', default=pid_file,
-    help='default ' + pid_file)
+pars.add_option(
+    '-c', '--conf-file', default=conf_file, help='default ' + conf_file)
+pars.add_option(
+    '-p', '--pid-file', default=pid_file, help='default ' + pid_file)
 pars.add_option('-l', '--log-dir', default=log_dir, help='default ' + log_dir)
 pars.add_option('', '--stop', action='store_true', help='Stop daemon')
 pars.add_option('', '--stop-thread', help='Stop thread name')
@@ -447,8 +415,8 @@ if not os.path.exists(stop_dir):
 listen_ports = []
 ip_conf = {}
 allowed_ips = []
-hosts = Host() # Kumpulan request
-logs = {} # Kumpulan log
+hosts = Host()  # Kumpulan request
+logs = {}  # Kumpulan log
 
 for name in conf.host:
     cfg = conf.host[name]
@@ -461,7 +429,7 @@ for name in conf.host:
     logs[name] = demon.Log(log_file)
     cfg['name'] = name
     if 'streamer' in cfg:
-        streamer_name = cfg['streamer'] 
+        streamer_name = cfg['streamer']
     else:
         streamer_name = name
     module = get_streamer_module(streamer_name)
@@ -490,7 +458,7 @@ for name in conf.host:
             sys.exit()
     ip_conf[ip_port] = cfg
 
-servers = {} 
+servers = {}
 for listen_port in listen_ports:
     listen_address = ('0.0.0.0', listen_port)
     server = AsServer(listen_address, Request)
@@ -503,10 +471,9 @@ signal.signal(signal.SIGTERM, out)
 running = [True]
 
 try:
-    while running: 
+    while running:
         check_connection()
         check_job()
-        #check_timeout()
         watch_stop_dir()
         sleep(5)
 except KeyboardInterrupt:

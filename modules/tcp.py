@@ -1,11 +1,18 @@
 import os
 import socket
 from threading import Thread
-from SocketServer import (
-    BaseRequestHandler,
-    TCPServer,
-    ThreadingMixIn,
-    )
+try:
+    from SocketServer import (
+        BaseRequestHandler,
+        TCPServer,
+        ThreadingMixIn,
+        )
+except ImportError:
+    from socketserver import (
+        BaseRequestHandler,
+        TCPServer,
+        ThreadingMixIn,
+        )
 from time import (
     time,
     sleep,
@@ -117,9 +124,9 @@ class NetworkDaemon(BaseDaemon):
             if raw:
                 self.on_receive_raw(raw)
             return raw
-        except socket.error, err:
+        except socket.error as err:
             self.on_receive_error(err)
-        except socket.timeout, err:
+        except socket.timeout as err:
             self.on_receive_error(err)
 
     def get_streamer(self):
@@ -147,7 +154,7 @@ class NetworkDaemon(BaseDaemon):
         try:
             self.request.sendall(raw)
             return True
-        except socket.error, err:
+        except socket.error as err:
             self.on_send_error(err)
 
     def on_send_error(self, err):
@@ -166,7 +173,7 @@ class NetworkDaemon(BaseDaemon):
         try:
             self.request.settimeout(1)
             self.request.close()
-        except socket.error, err:
+        except socket.error as err:
             self.log_error(err)
 
     def log_message(self, s):
@@ -283,7 +290,7 @@ def stop_daemon(pid_file):
     print('kill %d by force' % pid)
     try:
         os.kill(pid, signal.SIGKILL)
-    except OSError, err:
+    except OSError as err:
         print(err)
 
 
@@ -304,9 +311,9 @@ class Client(NetworkDaemon):
         try:
             self.request.connect(self.address)
             return True
-        except socket.error, err:
+        except socket.error as err:
             self.on_connecting_error(err)
-        except socket.timeout, err:
+        except socket.timeout as err:
             self.on_connecting_error(err)
 
     def on_connecting_error(self, err):

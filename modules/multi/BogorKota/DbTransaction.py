@@ -14,7 +14,11 @@ if is_conf_exists('bphtb'):
 if is_conf_exists('padl'):
     import padl
 if is_conf_exists('webr'):
-    import webr
+    from .webr import (
+        inquiry as webr_inquiry,
+        payment as webr_payment,
+        reversal as webr_reversal,
+        )
 
 
 class DbTransaction(Transaction):
@@ -84,20 +88,20 @@ class DbTransaction(Transaction):
     # Override
     def webr_inquiry_request_handler(self):
         try:
-            webr.inquiry(self)
-        except:
+            webr_inquiry(self)
+        except Exception:
             self.ack_unknown()
 
     # Override
     def webr_payment_request_handler(self):
         try:
-            webr.payment(self)
-        except:
+            webr_payment(self)
+        except Exception:
             self.ack_unknown()
 
     # Override
     def webr_reversal_request_handler(self):
         try:
-            webr.reversal(self)
-        except:
+            webr_reversal(self)
+        except Exception:
             self.ack_unknown()

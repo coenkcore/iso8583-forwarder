@@ -4,7 +4,7 @@ from ISO8583Server import (
     TimeVar,
     )
 from network import Network
-from structure import (
+from .structure import (
     BASE_TRANSACTION_BITS,
     RC_INVALID_NUMBER,
     ERR_SETTLEMENT_DATE,

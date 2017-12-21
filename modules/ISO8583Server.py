@@ -1,7 +1,3 @@
-from types import (
-    StringType,
-    UnicodeType,
-    )
 from tcp import print_log
 from datetime import (
     datetime,
@@ -25,7 +21,8 @@ def clean(s):
 
 def to_str(s):
     s = s or ''
-    s = type(s) in [StringType, UnicodeType] and s or str(s)
+    if not (isinstance(s, str) or isinstance(s, unicode)):
+        s = str(s)
     return clean(s)
 
 def left(s, width):

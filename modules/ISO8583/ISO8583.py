@@ -23,7 +23,7 @@ __licence__ = 'GPL V3'
 
 
 
-from ISOErrors import *
+from .ISOErrors import *
 import struct
 
 
@@ -422,7 +422,7 @@ class ISO8583:
 		self.__buildBitmap()
 		
 		# printing		
-		print self.BITMAP_HEX
+		print(self.BITMAP_HEX)
 	################################################################################################	
 	
 	################################################################################################	
@@ -756,7 +756,7 @@ class ISO8583:
 		"""
 		
 		resp = self.getRawIso()
-		print resp
+		print(resp)
 
 	
 	################################################################################################	

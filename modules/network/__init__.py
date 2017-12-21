@@ -5,7 +5,7 @@ from ISO8583Server import (
     Data,
     DateTimeVar,
     )
-from structure import (
+from .structure import (
     NETWORK_BITS,
     RC_OK,
     RC_OTHER_ERROR,
