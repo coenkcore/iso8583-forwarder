@@ -22,6 +22,8 @@ from .conf import (
     db_max_overflow,
     host,
     persen_denda,
+    pesan1,
+    pesan2,
     )
 
 
@@ -85,7 +87,9 @@ class InquiryResponse(BaseResponse):
             'Kode Rekening': invoice.rekening_kode,
             'Nama Rekening': invoice.rekening_nama,
             'Kode SKPD': invoice.departemen_kode,
-            'Nama SKPD': invoice.departemen_nama})
+            'Nama SKPD': invoice.departemen_nama,
+            'Additional 1': pesan1,
+            'Additional 2': pesan2,})
         self.set_invoice_profile_to_parent()
         print_debug('Invoice Profile', self.invoice_profile.to_dict())
 
@@ -156,6 +160,7 @@ def get_pembayaran_ke(invoice_id):
 
 class PaymentResponse(InquiryResponse):
     def response(self):
+        self.init_invoice_profile()
         if not self.is_valid():
             return
         self.create_payment()
@@ -163,7 +168,7 @@ class PaymentResponse(InquiryResponse):
 
     # Override
     def is_valid(self):
-        if not InquiryResponse.is_valid(self, False):
+        if not InquiryResponse.is_valid(self):
             return
         if self.calc.total != self.parent.from_iso.get_amount():
             return self.parent.ack_insufficient_fund(self.calc.total)

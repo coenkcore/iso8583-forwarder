@@ -10,6 +10,6 @@ INVOICE_PROFILE = [
     ('Nama Rekening', 40, 'A'),
     ('Kode SKPD', 20, 'A'),
     ('Nama SKPD',40, 'A'),
-    ('additional 1', 40,'A'),
+    ('Additional 1', 40,'A'),
     ('Additional 2', 40,'A'),
     ]

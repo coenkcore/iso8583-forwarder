@@ -8,6 +8,9 @@ db_max_overflow = 100
 
 persen_denda = 0
 
+pesan1 = ''
+pesan2 = ''
+
 host = {
     'bjb': {
         'id': 110,
