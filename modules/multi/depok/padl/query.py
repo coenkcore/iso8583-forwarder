@@ -5,7 +5,7 @@ from tools import (
     FixLength,
     DbTransactionID,
     )
-from sismiop.tools import hitung_denda
+from sismiop.db_tools import hitung_denda
 from structure import INVOICE_ID
 from conf import persen_denda
 

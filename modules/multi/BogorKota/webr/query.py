@@ -5,7 +5,7 @@ from tools import (
     round_up,
     DbTransactionID,
     )
-from sismiop.tools import hitung_denda
+from sismiop.db_tools import hitung_denda
 
 
 DEBUG = '--debug' in sys.argv

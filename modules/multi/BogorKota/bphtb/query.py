@@ -6,7 +6,7 @@ from tools import (
     DbTransactionID,
     )
 from common.pbb.structure import NOP
-from sismiop.tools import hitung_denda
+from sismiop.db_tools import hitung_denda
 from conf import persen_denda
 
 

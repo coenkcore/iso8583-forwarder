@@ -1,14 +1,14 @@
-from types import DictType
 from tools import FixLength
 from network import Network
 from common.transaction import BaseTransaction
-from structure import (
+from .structure import (
     TRANSACTION_BITS,
     INQUIRY_CODE,
     PAYMENT_CODE,
     RC_ALREADY_PAID,
     RC_NOT_AVAILABLE,
     RC_INSUFFICIENT_FUND,
+    ERR_INVALID_NUMBER,
     ERR_NOT_AVAILABLE,
     ERR_ALREADY_PAID,
     ERR_ALREADY_PAID_2,
@@ -24,8 +24,8 @@ from structure import (
 
 
 METHODS = {
-    INQUIRY_CODE:   'inquiry_request_handler',
-    PAYMENT_CODE:   'payment_request_handler',
+    INQUIRY_CODE: 'inquiry_request_handler',
+    PAYMENT_CODE: 'payment_request_handler',
     }
 
 
@@ -101,7 +101,7 @@ class Transaction(BaseTransaction):
 
     def get_bank_code(self, fieldname):
         value = self.conf[fieldname]
-        if type(value) is not DictType:
+        if not isinstance(value, dict):
             return value
         channel = self.get_channel()
         if channel in value:
@@ -113,7 +113,12 @@ class Transaction(BaseTransaction):
     def get_cabang(self):
         f = FixLength(CABANG)
         f.set_raw(self.get_value(107))
-        return f 
+        return f
+
+    def ack_invalid_number(self):
+        msg = ERR_INVALID_NUMBER.format(
+                invoice_id=self.from_iso.get_invoice_id())
+        self.ack(RC_INVALID_NUMBER, msg)
 
     def ack_not_available(self):
         msg = ERR_NOT_AVAILABLE.format(
@@ -156,7 +161,8 @@ class Transaction(BaseTransaction):
         self.ack(RC_NOT_AVAILABLE, msg)
 
     def ack_payment_owner(self):
-        msg = ERR_PAYMENT_OWNER.format(invoice_id=self.get_invoice_id())
+        msg = ERR_PAYMENT_OWNER.format(
+                invoice_id=self.get_invoice_id(), bank_id=self.conf['name'])
         self.ack(RC_NOT_AVAILABLE, msg)
 
     def ack_invoice_open(self):

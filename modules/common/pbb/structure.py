@@ -17,7 +17,7 @@ INVOICE_ID = NOP + [('Tahun Pajak', 4, 'N')]
 #############################################
 # Bit 3 to invoice data structure in bit 62 #
 #############################################
-INVOICE_PROFILE = [ 
+INVOICE_PROFILE = [
     ('Propinsi', 2, 'N'),
     ('Kabupaten', 2, 'N'),
     ('Kecamatan', 3, 'N'),

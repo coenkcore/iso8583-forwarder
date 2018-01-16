@@ -132,8 +132,14 @@ class BaseTransaction(Network):
         except ValueError:
             self.ack_transaction_date()
 
+    def get_channel(self):
+        return int(self.get_value(18))
+
     def get_bank_id(self):
         return int(self.get_value(32))
+
+    def get_forwarder(self):
+        return self.get_value(33)
 
     def get_sequence(self):
         return self.get_value(37)

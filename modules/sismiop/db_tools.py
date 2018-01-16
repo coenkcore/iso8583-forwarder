@@ -13,6 +13,7 @@ def bulan_tunggakan(jatuh_tempo, tgl_hitung):
         n = 24
     return n
 
+
 def hitung_denda(tagihan, jatuh_tempo, persen_denda, tgl_hitung=None):
     if jatuh_tempo is None:
         return 0, 0
@@ -25,6 +26,7 @@ def hitung_denda(tagihan, jatuh_tempo, persen_denda, tgl_hitung=None):
     bulan = bulan_tunggakan(jatuh_tempo, tgl_hitung)
     denda = bulan * float(persen_denda) / 100 * tagihan
     return bulan, denda
+
 
 def sppt2nop(sppt):
     return ''.join([sppt.kd_propinsi, sppt.kd_dati2, sppt.kd_kecamatan,

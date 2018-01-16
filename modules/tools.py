@@ -306,6 +306,14 @@ class FixLength(object):
             value = self.fields[name]['value']
             d[name] = value
         return d
+
+    def __repr__(self):
+        lines = []
+        for name, size, typ in self.struct:
+            value = str(self.fields[name]['value'])
+            s = '{} ({:d}): {} ({:d})'.format(name, size, value, len(value))
+            lines.append(s)
+        return '\n'.join(lines)
             
 
 ###########
