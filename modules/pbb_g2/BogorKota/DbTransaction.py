@@ -19,7 +19,6 @@ def debug_dict(label, d):
 # Agar saat Payment tidak perlu lagi mencari tahun_sisa.
 class Inquiry(BaseQuery):
     def before_save(self, calc, inq):
-        debug_dict('Inquiry values', inq.to_dict())
         inq.tahun_sisa = calc.tahun_sisa
 
 
