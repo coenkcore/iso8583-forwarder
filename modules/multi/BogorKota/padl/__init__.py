@@ -7,20 +7,20 @@ from sqlalchemy.orm import (
     )
 from tools import FixLength
 from multi.bphtb.structure import INVOICE_PROFILE
-from models import Models
-from query import (
-    Query,
+from .models import Models
+from .query import (
     CalculateInvoice,
     NTP,
     Reversal,
     )
-from conf import (
+from .conf import (
     db_url,
     db_schema,
     db_pool_size,
     db_max_overflow,
     persen_denda,
     host,
+    load_iso_models,
     )
 
 
@@ -32,32 +32,55 @@ session_factory = sessionmaker()
 DBSession = scoped_session(session_factory)
 DBSession.configure(bind=engine)
 models = Models(Base, db_schema)
-query = Query(models, DBSession)
+if load_iso_models:
+    iso_models = IsoModels(Base)
+else:
+    iso_models = None
 
 
 class BaseResponse(object):
     def __init__(self, parent):
         self.parent = parent
         self.invoice_id_raw = parent.from_iso.get_invoice_id()
+        self.models = self.get_models()
+        self.iso_models = self.get_iso_models()
+
+    def get_models(self):
+        return models
+
+    def get_iso_models(self):
+        return iso_models
 
     def is_transaction_owner(self, iso_pay):
         conf = host[self.parent.conf['name']]
-        return iso_pay.bank_id == conf['id']
+        if 'id' in conf:
+            return iso_pay.bank_id == conf['id']
+        return iso_pay.bank_id in conf['ids']
+
+    def is_allowed(self):
+        conf = host[self.parent.conf['name']]
+        if 'ids' in conf:
+            if self.parent.get_bank_id() not in conf['ids']:
+                return self.parent.ack_not_allowed()
+        return True
 
     def commit(self):
         DBSession.commit()
         self.parent.ack()
 
 
-
 class InquiryResponse(BaseResponse):
     def __init__(self, parent):
         BaseResponse.__init__(self, parent)
         self.parent = parent
-        self.calc = CalculateInvoice(models, DBSession,
-                        parent.from_iso.get_invoice_id(), persen_denda)
+        cls = self.get_calc_cls()
+        invoice_id_raw = parent.from_iso.get_invoice_id()
+        self.calc = cls(self.models, DBSession, invoice_id_raw, persen_denda)
         module_conf = host[self.parent.conf['name']]
         self.parent.conf.update(module_conf)
+
+    def get_calc_cls(self):
+        return CalculateInvoice
 
     def init_invoice_profile(self):
         self.invoice_profile = FixLength(INVOICE_PROFILE)
@@ -109,6 +132,8 @@ class InquiryResponse(BaseResponse):
         return True
 
     def response(self):
+        if not self.is_allowed():
+            return
         self.init_invoice_profile()
         if not self.is_valid():
             return self.parent.set_amount(0)
@@ -145,13 +170,11 @@ def inquiry(parent):
 ###########
 # Payment #
 ###########
-def create_ntp():
-    ntp = NTP(models, DBSession)
-    return ntp.create()
-
 
 class PaymentResponse(InquiryResponse):
     def response(self):
+        if not self.is_allowed():
+            return
         if not self.is_valid():
             return
         self.create_payment()
@@ -167,7 +190,7 @@ class PaymentResponse(InquiryResponse):
 
     def create_payment(self):
         sspdno = self.calc.get_pay_seq()
-        pay = models.Payment()
+        pay = self.models.Payment()
         pay.tahun = self.calc.invoice.tahun
         pay.spt_id = self.calc.invoice.id
         pay.sspdno = sspdno
@@ -176,15 +199,24 @@ class PaymentResponse(InquiryResponse):
         pay.create_date = pay.write_date = datetime.now() 
         pay.sspdtgl = self.parent.from_iso.get_transaction_datetime()
         pay.printed = 1 
+        self.before_save(pay)
         DBSession.add(pay)
         self.calc.set_paid()
         DBSession.flush()
         self.create_iso_payment(pay)
 
+    def before_save(self, pay):
+        pass
+
+    def create_ntp(self):
+        ntp = NTP(self.iso_models, DBSession)
+        return ntp.create()
+
+
     def create_iso_payment(self, pay):
         from_iso = self.parent.from_iso
-        ntp = create_ntp()
-        iso_pay = models.IsoPayment()
+        ntp = self.create_ntp()
+        iso_pay = self.iso_models.IsoPayment()
         iso_pay.id = pay.id
         iso_pay.invoice_id = pay.spt_id
         iso_pay.iso_request = from_iso.raw
@@ -212,9 +244,11 @@ def payment(parent):
 class ReversalResponse(BaseResponse):
     def __init__(self, parent):
         BaseResponse.__init__(self, parent)
-        self.rev = Reversal(models, DBSession, self.invoice_id_raw)
+        self.rev = Reversal(self.models, self.iso_models, DBSession, self.invoice_id_raw)
 
     def response(self):
+        if not self.is_allowed():
+            return
         if not self.rev.invoice:
             return self.parent.ack_payment_not_found()
         if not self.rev.is_paid():

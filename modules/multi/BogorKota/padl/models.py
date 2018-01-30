@@ -29,37 +29,44 @@ class Models(object):
         class Pajak(Base):
             __tablename__ = 'pad_pajak'
             __table_args__ = dict(autoload=True, schema=db_schema) 
+
         self.Pajak = Pajak
 
         class Usaha(Base):
             __tablename__ = 'pad_usaha'
             __table_args__ = dict(autoload=True, schema=db_schema) 
+
         self.Usaha = Usaha
 
         class Customer(Base):
             __tablename__ = 'pad_customer'
             __table_args__ = dict(autoload=True, schema=db_schema) 
+
         self.Customer = Customer
 
         class CustomerUsaha(Base):
             __tablename__ = 'pad_customer_usaha'
             __table_args__ = dict(autoload=True, schema=db_schema) 
+
         self.CustomerUsaha = CustomerUsaha
 
         class Invoice(Base):
             __tablename__ = 'pad_spt'
             __table_args__ = dict(autoload=True, schema=db_schema) 
+
         self.Invoice = Invoice
 
         class Payment(Base):
             __tablename__ = 'pad_sspd'
             __table_args__ = dict(autoload=True, schema=db_schema) 
+
         self.Payment = Payment
 
         class Channel(Base):
             __tablename__ = 'pad_channel'
             id = Column(Integer, primary_key=True)
             nama = Column(String(20), nullable=False, unique=True)
+
         self.Channel = Channel
 
         class Bank(Base):
@@ -67,8 +74,12 @@ class Models(object):
             id = Column(Integer, primary_key=True)
             singkatan = Column(String(16), nullable=False, unique=True)
             nama = Column(String(32), nullable=False, unique=True)
+
         self.Bank = Bank
 
+
+class IsoModels(object):
+    def __init__(self, Base):
         class IsoPayment(Base):
             __tablename__ = 'pad_payment'
             id = Column(Integer, ForeignKey('pad.pad_sspd.id'), primary_key=True)
@@ -87,6 +98,7 @@ class Models(object):
             bank_id = Column(Integer, ForeignKey('pad_tp.id'), nullable=False)
             channel_id = Column(Integer, ForeignKey('pad_channel.id'), nullable=False)
             bank_ip = Column(String(15), nullable=False)
+
         self.IsoPayment = IsoPayment
 
         class IsoReversal(Base):
@@ -96,4 +108,5 @@ class Models(object):
                          nullable=False,
                          default=create_now)
             iso_request = Column(String(1024), nullable=False)
+
         self.IsoReversal = IsoReversal

@@ -14,6 +14,7 @@ from .structure import (
     RC_ALREADY_PAID,
     RC_NOT_AVAILABLE,
     RC_INSUFFICIENT_FUND,
+    ERR_NOT_ALLOWED,
     ERR_NOT_AVAILABLE,
     ERR_ALREADY_PAID,
     ERR_ALREADY_PAID_2,
@@ -153,6 +154,10 @@ class Transaction(BaseTransaction):
         f = FixLength(CABANG)
         f.set_raw(self.get_value(107))
         return f 
+
+    def ack_not_allowed(self):
+        msg = ERR_NOT_ALLOWED.format(bank_id=self.get_bank_id())
+        self.ack(RC_NOT_AVAILABLE, msg)
 
     def ack_not_available(self):
         msg = ERR_NOT_AVAILABLE.format(

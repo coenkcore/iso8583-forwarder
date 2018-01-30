@@ -11,8 +11,9 @@ from conf import persen_denda
 
 
 class Query(object):
-    def __init__(self, models, DBSession):
+    def __init__(self, models, iso_models, DBSession):
         self.models = models
+        self.iso_models = iso_models
         self.DBSession = DBSession
 
     def query_invoice(self, tahun, sptno):
@@ -26,8 +27,8 @@ class Query(object):
         return q.first()
 
     def get_iso_payment(self, payment):
-        q = self.DBSession.query(self.models.IsoPayment).filter_by(
-                id=self.payment.id)
+        q = self.DBSession.query(self.iso_models.IsoPayment).filter_by(
+                id=payment.id)
         return q.first()
 
 
@@ -39,8 +40,8 @@ class NTP(DbTransactionID):
 
 
 class Invoice(Query):
-    def __init__(self, models, DBSession, invoice_id_raw):
-        Query.__init__(self, models, DBSession)
+    def __init__(self, models, iso_models, DBSession, invoice_id_raw):
+        Query.__init__(self, models, iso_models, DBSession)
         self.invoice_id_raw = invoice_id_raw
         self.invoice_id = FixLength(INVOICE_ID)
         self.invoice_id.set_raw(invoice_id_raw)
@@ -56,8 +57,8 @@ class Invoice(Query):
 
 
 class CalculateInvoice(Invoice):
-    def __init__(self, models, DBSession, invoice_id_raw, persen_denda):
-        Invoice.__init__(self, models, DBSession, invoice_id_raw)
+    def __init__(self, models, iso_models, DBSession, invoice_id_raw, persen_denda):
+        Invoice.__init__(self, models, iso_models, DBSession, invoice_id_raw)
         if not self.invoice:
             return
         self.persen_denda = persen_denda
