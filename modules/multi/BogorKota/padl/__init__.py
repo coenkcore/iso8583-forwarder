@@ -85,7 +85,7 @@ class InquiryResponse(BaseResponse):
     def init_invoice_profile(self):
         self.invoice_profile = FixLength(INVOICE_PROFILE)
         self.invoice_profile.from_dict({
-            'kode pajak': 'PADL', 
+            'kode pajak': 'PADL',
             'nama pajak': 'PENDAPATAN ASLI DAERAH LAINNYA',
             })
 
@@ -97,13 +97,13 @@ class InquiryResponse(BaseResponse):
         wp = self.calc.get_wp(op)
         nama = self.get_nama_wp(op, wp)
         self.invoice_profile.from_dict({
-            'npwpd': wp.npwpd, 
-            'nama' : nama,
-            'alamat': wp.alamat, 
+            'npwpd': wp.npwpd,
+            'nama': nama,
+            'alamat': wp.alamat,
             'tagihan': self.calc.tagihan,
-            'denda': self.calc.denda, 
+            'denda': self.calc.denda,
             'jumlah': self.calc.total,
-            'alamat op' : op.opalamat,
+            'alamat op': op.opalamat,
             'kelurahan op': kel.kelurahannm,
             'kecamatan op': kec.kecamatannm,
             'kode pos wp': wp.wpkodepos,
@@ -114,7 +114,7 @@ class InquiryResponse(BaseResponse):
     def get_nama_wp(self, op, wp):
         nama_ = []
         if op.opnm:
-            nama_.append(op.opnm) 
+            nama_.append(op.opnm)
         nama = self.calc.invoice.r_nama or wp.customernm
         if nama:
             nama_.append(nama)
@@ -142,7 +142,8 @@ class InquiryResponse(BaseResponse):
 
     def set_jatuh_tempo(self):
         if self.calc.invoice.jatuhtempotgl:
-            self.set_invoice_profile_('jatuh tempo',
+            self.set_invoice_profile_(
+                'jatuh tempo',
                 self.calc.invoice.jatuhtempotgl.strftime('%d%m%Y'))
 
     def set_invoice_profile_(self, key, value):
@@ -196,9 +197,9 @@ class PaymentResponse(InquiryResponse):
         pay.sspdno = sspdno
         pay.denda = pay.bunga = self.calc.denda
         pay.jml_bayar = self.calc.total
-        pay.create_date = pay.write_date = datetime.now() 
+        pay.create_date = pay.write_date = datetime.now()
         pay.sspdtgl = self.parent.from_iso.get_transaction_datetime()
-        pay.printed = 1 
+        pay.printed = 1
         self.before_save(pay)
         DBSession.add(pay)
         self.calc.set_paid()
@@ -211,7 +212,6 @@ class PaymentResponse(InquiryResponse):
     def create_ntp(self):
         ntp = NTP(self.iso_models, DBSession)
         return ntp.create()
-
 
     def create_iso_payment(self, pay):
         from_iso = self.parent.from_iso
@@ -244,7 +244,8 @@ def payment(parent):
 class ReversalResponse(BaseResponse):
     def __init__(self, parent):
         BaseResponse.__init__(self, parent)
-        self.rev = Reversal(self.models, self.iso_models, DBSession, self.invoice_id_raw)
+        self.rev = Reversal(
+                self.models, self.iso_models, DBSession, self.invoice_id_raw)
 
     def response(self):
         if not self.is_allowed():

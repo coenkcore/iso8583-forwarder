@@ -8,17 +8,17 @@ from .structure import (
 def inquiry_request(iso, module_name, invoice_id, bank_id):
     inquiry_code = INQUIRY_CODE
     kini = datetime.now()
-    iso.setBit(2, kini.strftime('%Y%m%d%H%M%S')) 
-    iso.set_transaction_code(inquiry_code) 
-    iso.setBit(12, kini.strftime('%H%M%S')) 
-    iso.setBit(13, kini.strftime('%m%d')) 
-    iso.setBit(15, kini.strftime('%m%d')) 
-    iso.setBit(18, '6010') 
+    iso.setBit(2, kini.strftime('%Y%m%d%H%M%S'))
+    iso.set_transaction_code(inquiry_code)
+    iso.setBit(12, kini.strftime('%H%M%S'))
+    iso.setBit(13, kini.strftime('%m%d'))
+    iso.setBit(15, kini.strftime('%m%d'))
+    iso.setBit(18, '6010')
     iso.setBit(22, '021')
     iso.setBit(32, bank_id)
     iso.setBit(33, '00110')
     iso.setBit(35, '')
-    iso.setBit(37, kini.strftime('%H%M%S')) 
+    iso.setBit(37, kini.strftime('%H%M%S'))
     iso.setBit(41, '000')
     iso.setBit(42, '000000000000000')
     iso.setBit(43, 'Test Bank')
@@ -29,7 +29,7 @@ def inquiry_request(iso, module_name, invoice_id, bank_id):
     iso.setBit(63, '')
     iso.setBit(102, '')
     iso.setBit(107, '')
- 
+
 
 def payment_request(iso, module_name, inq_resp_iso, bank_id):
     iso.copy(

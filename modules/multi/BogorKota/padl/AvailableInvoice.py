@@ -35,7 +35,8 @@ class AvailableInvoice(object):
 
     def show(self, option):
         sample_count = int(option.sample_count)
-        q = DBSession.query(models.Invoice.tahun, models.Invoice.sptno,
+        q = DBSession.query(
+                models.Invoice.tahun, models.Invoice.sptno,
                 models.Rekening.rekeningnm, models.Rekening.rekeningkd)
         q = q.filter(models.Invoice.pajak_id == models.Pajak.id)
         q = q.filter(models.Pajak.rekening_id == models.Rekening.id)
@@ -62,7 +63,8 @@ class AvailableInvoice(object):
             invoice_id['Tahun'] = row.tahun
             invoice_id['SPT No'] = row.sptno
             invoice_id_raw = invoice_id.get_raw()
-            calc = CalculateInvoice(models, iso_models, DBSession, invoice_id_raw,
+            calc = CalculateInvoice(
+                    models, iso_models, DBSession, invoice_id_raw,
                     persen_denda)
             if calc.total < 1:
                 continue
@@ -76,8 +78,9 @@ class AvailableInvoice(object):
             jatuh_tempo = 'tidak ada'
         msg = '#{no}/{count} {id} {nama_rek} {kode_rek} Rp {tagihan} + '\
               'Rp {denda} = Rp {total}, jatuh tempo {jatuh_tempo}'
-        msg = msg.format(no=count, id=invoice_id_raw, nama_rek=row.rekeningnm,
-               kode_rek=row.rekeningkd, tagihan=calc.tagihan,
-               denda=calc.denda, total=calc.total, count=option.sample_count,
-               jatuh_tempo=jatuh_tempo)
+        msg = msg.format(
+                no=count, id=invoice_id_raw, nama_rek=row.rekeningnm,
+                kode_rek=row.rekeningkd, tagihan=calc.tagihan,
+                denda=calc.denda, total=calc.total, count=option.sample_count,
+                jatuh_tempo=jatuh_tempo)
         print(msg)

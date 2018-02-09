@@ -27,14 +27,16 @@ class IsoModels(object):
             ntb = Column(String(32), nullable=False)
             ntp = Column(String(32), nullable=False, unique=True)
             bank_id = Column(Integer, ForeignKey('pad_tp.id'), nullable=False)
-            channel_id = Column(Integer, ForeignKey('pad_channel.id'), nullable=False)
+            channel_id = Column(
+                    Integer, ForeignKey('pad_channel.id'), nullable=False)
             bank_ip = Column(String(15), nullable=False)
 
         self.IsoPayment = IsoPayment
 
         class IsoReversal(Base):
             __tablename__ = 'pad_reversal'
-            id = Column(Integer, ForeignKey('pad_payment.id'), primary_key=True)
+            id = Column(
+                    Integer, ForeignKey('pad_payment.id'), primary_key=True)
             tgl = Column(DateTime(timezone=True),
                          nullable=False,
                          default=create_now)

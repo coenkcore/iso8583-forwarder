@@ -9,7 +9,7 @@ from multi.BogorKota.padl import (
     BaseResponse,
     )
 from .query import Reversal
-from .models import IsoModels 
+from .models import IsoModels
 
 
 iso_models = IsoModels(Base)
@@ -18,7 +18,8 @@ iso_models = IsoModels(Base)
 class CalculateInvoice(BaseCalc):
     def __init__(self, models, DBSession, invoice_id_raw, persen_denda):
         short_id = invoice_id_raw[6:]
-        BaseCalc.__init__(self, models, iso_models, DBSession, short_id, persen_denda)
+        BaseCalc.__init__(
+                self, models, iso_models, DBSession, short_id, persen_denda)
 
 
 class InquiryResponse(BaseInqResp):
@@ -77,6 +78,7 @@ def inquiry(parent):
 def payment(parent):
     r = PaymentResponse(parent)
     r.response()
+
 
 def reversal(parent):
     r = ReversalResponse(parent)

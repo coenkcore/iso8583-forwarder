@@ -1,5 +1,5 @@
 db_url = 'postgresql://sugiana:a@localhost/padl_bogor_kota'
-db_schema = 'pad' 
+db_schema = 'pad'
 
 # True jika multi/conf.py module_name = 'BogorKota' atau
 # tepatnya jika modul lain menggunakan struktur tabel ISO
@@ -17,4 +17,7 @@ host = {
     'btn': {
         'id': 200,
         },
+    'mitracomm': {
+        'ids': [8, 14],  # Mandiri, BCA
+        }
     }

@@ -75,7 +75,7 @@ class DbTransaction(BaseDbTransaction):
             func = getattr(module, func_name)
             try:
                 func(self)
-            except:
+            except Exception:
                 self.ack_unknown()
         else:
             self.ack_invalid_kode_aplikasi()
@@ -91,11 +91,11 @@ class DbTransaction(BaseDbTransaction):
     # Override
     def reversal_request_handler(self):
         self.request_handler('reversal')
-        
+
     def ack_invalid_kode_pemda(self):
         msg = ERR_KODE_PEMDA.format(kode=self.invoice_id['Kode Pemda'])
         self.ack(RC_NOT_AVAILABLE, msg)
-        
+
     def ack_invalid_kode_aplikasi(self):
         msg = ERR_KODE_APLIKASI.format(kode=self.invoice_id['Kode Aplikasi'])
         self.ack(RC_NOT_AVAILABLE, msg)

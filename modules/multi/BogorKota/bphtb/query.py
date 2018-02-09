@@ -7,7 +7,8 @@ from tools import (
     )
 from common.pbb.structure import NOP
 from sismiop.db_tools import hitung_denda
-from conf import persen_denda
+from .structure import INVOICE_ID
+from .conf import persen_denda
 
 
 class Query(object):
@@ -16,8 +17,8 @@ class Query(object):
         self.DBSession = DBSession
 
     def query_invoice(self, tahun, kode, no_sspd):
-        return self.DBSession.query(self.models.Invoice).filter_by(tahun=tahun,
-                kode=kode, no_sspd=no_sspd)
+        return self.DBSession.query(self.models.Invoice).filter_by(
+                tahun=tahun, kode=kode, no_sspd=no_sspd)
 
     def get_payment(self, invoice):
         q = self.DBSession.query(self.models.Payment).filter_by(
@@ -39,17 +40,20 @@ class NTP(DbTransactionID):
 
 
 class Invoice(Query):
-    def __init__(self, models, DBSession, invoice_id):
+    def __init__(self, models, DBSession, invoice_id_raw):
         Query.__init__(self, models, DBSession)
-        self.invoice_id = invoice_id 
-        self.invoice = False 
+        self.invoice_id_raw = invoice_id_raw
+        self.invoice_id = FixLength(INVOICE_ID)
+        self.invoice_id.set_raw(invoice_id_raw)
+        self.invoice = False
         try:
             kode = int(self.invoice_id['Kode'])
         except TypeError:
             return
         except ValueError:
             return
-        q = self.query_invoice(self.invoice_id['Tahun'], str(kode),
+        q = self.query_invoice(
+                self.invoice_id['Tahun'], str(kode),
                 self.invoice_id['SSPD No'])
         self.invoice = q.first()
 
@@ -61,8 +65,8 @@ class Invoice(Query):
 
 
 class CalculateInvoice(Invoice):
-    def __init__(self, models, DBSession, invoice_id, persen_denda):
-        Invoice.__init__(self, models, DBSession, invoice_id)
+    def __init__(self, models, DBSession, invoice_id_raw, persen_denda):
+        Invoice.__init__(self, models, DBSession, invoice_id_raw)
         if not self.invoice:
             return
         self.persen_denda = persen_denda
@@ -83,8 +87,9 @@ class CalculateInvoice(Invoice):
 
     def hitung(self):
         self.tagihan = round_up(self.invoice.bphtb_harus_dibayarkan)
-        bln, self.denda = hitung_denda(self.tagihan,
-            self.invoice.tgl_jatuh_tempo.date(), self.persen_denda)
+        bln, self.denda = hitung_denda(
+                self.tagihan, self.invoice.tgl_jatuh_tempo.date(),
+                self.persen_denda)
         self.denda = round_up(self.denda)
         self.total = self.tagihan + self.denda
 
@@ -103,17 +108,17 @@ class CalculateInvoice(Invoice):
 
     def get_kecamatan(self):
         q = self.DBSession.query(self.models.Kecamatan).filter_by(
-                kd_propinsi = self.invoice.kd_propinsi,
-                kd_dati2 = self.invoice.kd_dati2,
-                kd_kecamatan = self.invoice.kd_kecamatan)
+                kd_propinsi=self.invoice.kd_propinsi,
+                kd_dati2=self.invoice.kd_dati2,
+                kd_kecamatan=self.invoice.kd_kecamatan)
         return q.first()
 
     def get_kelurahan(self):
         q = self.DBSession.query(self.models.Kelurahan).filter_by(
-                kd_propinsi = self.invoice.kd_propinsi,
-                kd_dati2 = self.invoice.kd_dati2,
-                kd_kecamatan = self.invoice.kd_kecamatan,
-                kd_kelurahan = self.invoice.kd_kelurahan)
+                kd_propinsi=self.invoice.kd_propinsi,
+                kd_dati2=self.invoice.kd_dati2,
+                kd_kecamatan=self.invoice.kd_kecamatan,
+                kd_kelurahan=self.invoice.kd_kelurahan)
         return q.first()
 
     def get_pay_seq(self):
