@@ -1,13 +1,19 @@
 from common.pbb.query import Inquiry as BaseQuery
-from pbb.BogorKota.DbTransaction import (
+from pbb.cikarang.DbTransaction import (
     CalculateInvoice as BaseCalc,
     DbTransaction as BaseTrx,
     InquiryResponse as BaseInqResp,
     PaymentResponse as BasePayResp,
-    debug_label,
-    debug,
     )
 from pbb_g2.structure import INVOICE_PROFILE
+
+
+def debug(s):
+    print('*** DEBUG {}'.format(s))
+
+
+def debug_label(label, s):
+    debug('{:22}: {}'.format(label, s))
 
 
 def debug_dict(label, d):
@@ -49,7 +55,7 @@ class InquiryResponse(BaseInqResp):
     def set_invoice_profile(self):
         BaseInqResp.set_invoice_profile(self)
         self.invoice_profile.from_dict({
-            'Discount': self.calc.discount,
+            'Discount': 0,
             'Tahun Sisa': self.calc.tahun_sisa,
             })
         debug_dict('Invoice Profile', self.invoice_profile)
@@ -88,7 +94,7 @@ class PaymentResponse(BasePayResp):
     def set_invoice_profile(self):
         BaseInqResp.set_invoice_profile(self)
         self.invoice_profile.from_dict({
-            'Discount': self.calc.discount,
+            'Discount': 0,
             })
 
     def create_payment(self, inq):

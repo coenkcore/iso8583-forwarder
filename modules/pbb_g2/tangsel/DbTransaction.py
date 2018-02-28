@@ -1,5 +1,5 @@
 from common.pbb.query import Inquiry as BaseQuery
-from pbb.BogorKota.DbTransaction import (
+from pbb.tangsel.DbTransaction import (
     CalculateInvoice as BaseCalc,
     DbTransaction as BaseTrx,
     InquiryResponse as BaseInqResp,
