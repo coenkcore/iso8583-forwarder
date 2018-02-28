@@ -4,9 +4,9 @@ from base_models import CommonModel
 class Models(object):
     def __init__(
             self, Base, db_schema, tabel_dat_objek_pajak=False,
-            db_schema_payment=None):
-        if db_schema_payment is None:
-            db_schema_payment = db_schema
+            payment_db_schema=None):
+        if payment_db_schema is None:
+            payment_db_schema = db_schema
 
         class Invoice(Base, CommonModel):
             __tablename__ = 'sppt'
@@ -15,7 +15,7 @@ class Models(object):
 
         class Pembayaran(Base, CommonModel):
             __tablename__ = 'pembayaran_sppt'
-            __table_args__ = dict(schema=db_schema_payment, autoload=True)
+            __table_args__ = dict(schema=payment_db_schema, autoload=True)
         self.Pembayaran = Pembayaran
 
         class Kelurahan(Base, CommonModel):

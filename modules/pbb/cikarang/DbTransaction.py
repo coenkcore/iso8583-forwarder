@@ -20,6 +20,7 @@ from .conf import (
     db_url,
     db_schema,
     iso_db_schema,
+    payment_db_schema,
     db_pool_size,
     db_max_overflow,
     persen_denda,
@@ -32,7 +33,8 @@ engine = create_engine(db_url, pool_size=db_pool_size,
                        max_overflow=db_max_overflow)
 Base.metadata.bind = engine
 DBSession.configure(bind=engine)
-models = Models(Base, db_schema, iso_db_schema)
+models = Models(
+        Base, db_schema, iso_db_schema, payment_db_schema=payment_db_schema)
 
 BANK_FIELDS = ('kd_kanwil', 'kd_kantor', 'kd_tp')
 PREFIX_NTP_FIELDS = BANK_FIELDS[:-1]
