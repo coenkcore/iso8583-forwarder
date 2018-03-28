@@ -97,7 +97,8 @@ class CalculateInvoice(Invoice):
         bunga = round_up(bunga)
         self.tagihan = self.invoice.jumlah - bunga
         self.tagihan = round_up(self.tagihan)
-        bln, self.denda = hitung_denda(self.tagihan, self.invoice.jatuh_tempo,
+        jth_tempo = self.invoice.jatuh_tempo==1 and self.invoice.jatuh_tempo or None
+        bln, self.denda = hitung_denda(self.tagihan, jth_tempo,
                 self.persen_denda)
         self.denda += bunga
         self.denda = round_up(self.denda)
