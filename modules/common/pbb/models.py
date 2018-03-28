@@ -14,10 +14,12 @@ from base_models import CommonModel
 from sismiop.models import Models as SismiopModels
 
 
-
 class Models(SismiopModels):
-    def __init__(self, Base, db_schema, iso_db_schema=False):
-        SismiopModels.__init__(self, Base, db_schema)
+    def __init__(
+            self, Base, db_schema, iso_db_schema=False,
+            tabel_dat_objek_pajak=False, payment_db_schema=None):
+        SismiopModels.__init__(
+            self, Base, db_schema, tabel_dat_objek_pajak, payment_db_schema)
         if iso_db_schema is False:
             iso_db_schema = db_schema
         self.InquirySeq = Sequence('inquiry_seq', schema=iso_db_schema)
@@ -29,12 +31,12 @@ class Models(SismiopModels):
             tgl = Column(DateTime, default=datetime.now, nullable=False)
             nop = Column(String(32), nullable=False)
             propinsi = Column(String(2), nullable=False)
-            kabupaten = Column(String(2), nullable=False) 
+            kabupaten = Column(String(2), nullable=False)
             kecamatan = Column(String(3), nullable=False)
             kelurahan = Column(String(3), nullable=False)
             blok = Column(String(3), nullable=False)
             urut = Column(String(4), nullable=False)
-            jenis = Column(String(1), nullable=False) 
+            jenis = Column(String(1), nullable=False)
             tahun = Column(Integer, nullable=False)
             tagihan = Column(Float, nullable=False)
             jatuh_tempo = Column(Date, nullable=False)
@@ -45,6 +47,8 @@ class Models(SismiopModels):
             stan = Column(Integer)
             settlement = Column(DateTime)
             pengirim = Column(String(16), nullable=False)
+            # Tahun Pajak yang belum dibayar
+            tahun_sisa = Column(Integer)
         self.Inquiry = Inquiry
 
         iso_db_schema_as_prefix = iso_db_schema and iso_db_schema + '.' or ''
@@ -56,12 +60,12 @@ class Models(SismiopModels):
             inquiry_id = Column(Integer, ForeignKey(foreign_inquiry_id),
                                 nullable=False)
             propinsi = Column(String(2), nullable=False)
-            kabupaten = Column(String(2), nullable=False) 
+            kabupaten = Column(String(2), nullable=False)
             kecamatan = Column(String(3), nullable=False)
             kelurahan = Column(String(3), nullable=False)
             blok = Column(String(3), nullable=False)
             urut = Column(String(4), nullable=False)
-            jenis = Column(String(1), nullable=False) 
+            jenis = Column(String(1), nullable=False)
             tahun = Column(Integer, nullable=False)
             ke = Column(Integer, nullable=False)
             kd_kanwil_bank = Column(String(2), nullable=False)
@@ -71,7 +75,7 @@ class Models(SismiopModels):
             kd_tp = Column(String(2), nullable=False)
             channel = Column(String(4))
             ntb = Column(String(64))
-            iso_request = Column(String(1024), nullable=False) # Untuk reversal
+            iso_request = Column(String(1024), nullable=False)
             __table_args__ = (
                 UniqueConstraint('propinsi', 'kabupaten', 'kecamatan',
                                  'kelurahan', 'blok', 'urut', 'jenis',
@@ -80,10 +84,14 @@ class Models(SismiopModels):
                 )
         self.Payment = Payment
 
+        foreign_payment_id = iso_db_schema_as_prefix + 'payment.id'
+
         class Reversal(Base, CommonModel):
             __tablename__ = 'reversal'
             __table_args__ = dict(schema=iso_db_schema)
-            payment_id = Column(String(32), ForeignKey('payment.id'), primary_key=True)
+            payment_id = Column(
+                    String(32), ForeignKey(foreign_payment_id),
+                    primary_key=True)
             tgl = Column(DateTime, default=datetime.now, nullable=False)
             iso_request = Column(String(1024), nullable=False)
         self.Reversal = Reversal

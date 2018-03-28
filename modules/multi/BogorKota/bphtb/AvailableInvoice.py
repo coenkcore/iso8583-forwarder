@@ -28,8 +28,9 @@ query = Query(models, DBSession)
 class AvailableInvoice(object):
     def show(self, option):
         sample_count = int(option.sample_count)
-        q = DBSession.query(models.Invoice).filter_by(status_pembayaran=0)
-        q = q.order_by(models.Invoice.bphtb_harus_dibayarkan)
+        q = DBSession.query(models.Invoice).filter_by(
+                status_pembayaran=0).filter(
+                models.Invoice.bphtb_harus_dibayarkan > 0)
         offset = -1
         count = 0
         while True:
@@ -43,15 +44,19 @@ class AvailableInvoice(object):
             invoice_id['Tahun'] = row.tahun
             invoice_id['Kode'] = row.kode
             invoice_id['SSPD No'] = row.no_sspd
-            calc = CalculateInvoice(models, DBSession, invoice_id,
-                    persen_denda)
+            calc = CalculateInvoice(
+                    models, DBSession, invoice_id, persen_denda)
             if calc.total < 1:
                 continue
             count += 1
-            msg = '#{no}/{count} {id} Rp {total}'.format(no=count,
-                    id=invoice_id.get_raw(), total=calc.total,
-                    count=sample_count)
-            print(msg)
+            invoice_id_raw = invoice_id.get_raw()
+            self.on_print(option, count, invoice_id_raw, calc)
 
     def get_invoice_id_structure(self):
         return INVOICE_ID
+
+    def on_print(self, option, count, invoice_id_raw, calc):
+        msg = '#{no}/{count} {id} Rp {total}'.format(
+                no=count, id=invoice_id_raw, total=calc.total,
+                count=option.sample_count)
+        print(msg)

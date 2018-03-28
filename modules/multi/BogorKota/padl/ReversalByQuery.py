@@ -19,7 +19,7 @@ models = Models(Base, db_schema)
 
 class ReversalByQuery(Reversal):
     def __init__(self, invoice_id_raw):
-        Reversal.__init__(self, models, DBSession, invoice_id_raw)
+        Reversal.__init__(self, models, None, DBSession, invoice_id_raw)
 
     def set_unpaid(self):
         Reversal.set_unpaid(self)

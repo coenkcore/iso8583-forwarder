@@ -5,14 +5,15 @@ from tools import (
     FixLength,
     DbTransactionID,
     )
-from sismiop.tools import hitung_denda
+from sismiop.db_tools import hitung_denda
 from structure import INVOICE_ID
 from conf import persen_denda
 
 
 class Query(object):
-    def __init__(self, models, DBSession):
+    def __init__(self, models, iso_models, DBSession):
         self.models = models
+        self.iso_models = iso_models
         self.DBSession = DBSession
 
     def query_invoice(self, tahun, sptno):
@@ -26,8 +27,8 @@ class Query(object):
         return q.first()
 
     def get_iso_payment(self, payment):
-        q = self.DBSession.query(self.models.IsoPayment).filter_by(
-                id=self.payment.id)
+        q = self.DBSession.query(self.iso_models.IsoPayment).filter_by(
+                id=payment.id)
         return q.first()
 
 
@@ -39,13 +40,13 @@ class NTP(DbTransactionID):
 
 
 class Invoice(Query):
-    def __init__(self, models, DBSession, invoice_id_raw):
-        Query.__init__(self, models, DBSession)
+    def __init__(self, models, iso_models, DBSession, invoice_id_raw):
+        Query.__init__(self, models, iso_models, DBSession)
         self.invoice_id_raw = invoice_id_raw
         self.invoice_id = FixLength(INVOICE_ID)
         self.invoice_id.set_raw(invoice_id_raw)
-        q = self.query_invoice(self.invoice_id['Tahun'],
-                self.invoice_id['SPT No'])
+        q = self.query_invoice(
+                self.invoice_id['Tahun'], self.invoice_id['SPT No'])
         self.invoice = q.first()
 
     def is_paid(self):
@@ -56,8 +57,9 @@ class Invoice(Query):
 
 
 class CalculateInvoice(Invoice):
-    def __init__(self, models, DBSession, invoice_id_raw, persen_denda):
-        Invoice.__init__(self, models, DBSession, invoice_id_raw)
+    def __init__(
+            self, models, iso_models, DBSession, invoice_id_raw, persen_denda):
+        Invoice.__init__(self, models, iso_models, DBSession, invoice_id_raw)
         if not self.invoice:
             return
         self.persen_denda = persen_denda
@@ -72,8 +74,8 @@ class CalculateInvoice(Invoice):
         self.bunga = round_up(self.bunga)
         self.tagihan = self.invoice.pajak_terhutang - self.bunga
         self.tagihan = round_up(self.tagihan)
-        bln, self.denda = hitung_denda(self.tagihan, self.invoice.jatuhtempotgl,
-                self.persen_denda)
+        bln, self.denda = hitung_denda(
+                self.tagihan, self.invoice.jatuhtempotgl, self.persen_denda)
         self.denda += self.bunga
         self.denda = round_up(self.denda)
         self.total = self.tagihan + self.denda
@@ -84,8 +86,9 @@ class CalculateInvoice(Invoice):
         return Query.get_iso_payment(self, self.payment)
 
     def get_total_payment(self):
-        q = self.DBSession.query(func.sum(self.models.Payment.jml_bayar).\
-                label('jml')).filter_by(spt_id=self.invoice.id)
+        q = self.DBSession.query(func.sum(
+                self.models.Payment.jml_bayar).label('jml')).filter_by(
+                spt_id=self.invoice.id)
         pay = q.first()
         return pay and pay.jml or 0
 
@@ -136,6 +139,7 @@ class Reversal(Invoice):
         self.invoice.status_pembayaran = 0
         self.DBSession.add(self.invoice)
         if self.payment:
-            self.payment.jml_bayar = self.payment.denda = self.payment.bunga = 0
+            self.payment.jml_bayar = self.payment.denda = \
+                    self.payment.bunga = 0
             self.DBSession.add(self.payment)
         self.DBSession.flush()

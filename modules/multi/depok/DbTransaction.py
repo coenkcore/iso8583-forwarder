@@ -1,7 +1,18 @@
+import os
 from ..transaction import Transaction
-import pbb
-import bphtb
-import padl
+
+
+def is_conf_exists(name):
+    filename = os.path.join(
+                os.getcwd(), 'modules', 'multi', 'depok', name, 'conf.py')
+    return os.path.exists(filename)
+
+if is_conf_exists('pbb'):
+    import pbb
+if is_conf_exists('bphtb'):
+    import bphtb
+if is_conf_exists('padl'):
+    import padl
 
 
 class DbTransaction(Transaction):

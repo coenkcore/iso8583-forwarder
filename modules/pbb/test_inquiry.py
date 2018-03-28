@@ -3,44 +3,81 @@ from pprint import pprint
 from time import sleep
 from optparse import OptionParser
 from structure import INQUIRY_CODE
-from transaction import Transaction
 import conf
 
 
-name = '.'.join(['pbb', conf.module_name])
-module = __import__(name)
+def default_inquiry_request(iso, invoice_id, bank_id):
+    kini = datetime.now()
+    iso.setBit(2, kini.strftime('%Y%m%d%H%M%S'))
+    iso.set_transaction_code(INQUIRY_CODE)
+    iso.setBit(12, kini.strftime('%H%M%S'))
+    iso.setBit(13, kini.strftime('%m%d'))
+    iso.setBit(15, kini.strftime('%m%d'))
+    iso.setBit(18, '6010')
+    iso.setBit(22, '021')
+    iso.setBit(32, bank_id)
+    iso.setBit(33, '00110')
+    iso.setBit(35, '')
+    iso.setBit(37, kini.strftime('%H%M%S'))
+    iso.setBit(41, '000')
+    iso.setBit(42, '000000000000000')
+    iso.setBit(43, 'Nama Bank')
+    iso.setBit(49, '390')
+    iso.setBit(59, 'PAY')
+    iso.setBit(60, '142')
+    iso.setBit(61, invoice_id)
+    iso.setBit(63, '')
+    iso.setBit(102, '')
+    iso.setBit(107, '')
+
+
+test_not_found = False
+name = '.'.join(['pbb', 'test'])
+try:
+    module = __import__(name)
+except ImportError as test_not_found:
+    name = '.'.join(['pbb', conf.module_name])
+    module = __import__(name)
 area_module = getattr(module, conf.module_name)
-InquiryResponse = area_module.InquiryResponse
+DbTransaction = area_module.DbTransaction
+
+if test_not_found:
+    inquiry_request = default_inquiry_request
+else:
+    inquiry_request = area_module.test.inquiry_request
 
 
-class Inquiry(Transaction):
-    def inquiry_request(self, module_name, invoice_id):
-        self.set_transaction_request()
-        kini = datetime.now()
-        self.setBit(2, kini.strftime('%Y%m%d%H%M%S')) 
-        self.set_transaction_code(INQUIRY_CODE) 
-        self.setBit(12, kini.strftime('%H%M%S')) 
-        self.setBit(13, kini.strftime('%m%d')) 
-        self.setBit(15, kini.strftime('%m%d')) 
-        self.setBit(18, '6010') 
-        self.setBit(22, '021')
-        self.setBit(32, '110')
-        self.setBit(33, '00110')
-        self.setBit(35, '')
-        self.setBit(37, kini.strftime('%H%M%S')) 
-        self.setBit(41, '000')
-        self.setBit(42, '000000000000000')
-        self.setBit(43, 'Nama Bank')
-        self.setBit(49, '390')
-        self.setBit(59, 'PAY')
-        self.setBit(60, '142')
-        self.setBit(61, invoice_id)
-        self.setBit(63, '')
-        self.setBit(102, '')
-        self.setBit(107, '')
+class TestInquiry(object):
+    def __init__(self, argv):
+        self.option = get_option(argv)
+        if not self.option:
+            return
+        self.invoice_id = self.option.invoice_id.replace('-', '')
+        streamer_name, bank_id = split_bank(self.option.bank)
+        self.conf = dict(name=streamer_name, ip='127.0.0.1', bank_id=bank_id)
 
+    def get_iso_cls(self):
+        return DbTransaction
 
-class Test(object):
+    def run(self):
+        if not self.option:
+            return
+        cls = self.get_iso_cls()
+        print('Bank kirim inquiry request')
+        req_iso = cls()
+        req_iso.set_transaction_request()
+        inquiry_request(req_iso, self.invoice_id, self.conf['bank_id'])
+        raw = self.get_raw(req_iso)
+        print('Pemda terima inquiry request')
+        from_iso = cls()
+        from_iso.setIsoContent(raw)
+        print('Pemda kirim inquiry response')
+        resp_iso = cls(from_iso=from_iso, conf=self.conf)
+        func = getattr(resp_iso, from_iso.get_func_name())
+        func()
+        self.get_raw(resp_iso)
+        return resp_iso  # Untuk test_payment.py
+
     def get_raw(self, iso):
         msg = 'MTI {mti}'.format(mti=iso.getMTI())
         print(msg)
@@ -51,35 +88,11 @@ class Test(object):
         return raw
 
 
-class TestInquiry(Test):
-    def __init__(self, module_name, invoice_id, conf={}):
-        self.module_name = module_name
-        self.invoice_id = invoice_id
-        self.conf = conf
-
-    def run(self):
-        print('Bank kirim inquiry request')
-        req_iso = Inquiry()
-        req_iso.inquiry_request(self.module_name, self.invoice_id)
-        raw = self.get_raw(req_iso)
-        print('Pemda terima inquiry request')
-        from_iso = Transaction()
-        from_iso.setIsoContent(raw)
-        print('Pemda kirim inquiry response')
-        resp_iso = InquiryResponse(from_iso=from_iso, conf=self.conf)
-        func = getattr(resp_iso, from_iso.get_func_name())
-        func()
-        self.get_raw(resp_iso)
-        return resp_iso # Untuk test_payment.py
-
-
 def get_option(argv):
-    module_name = 'pbb'
-    bank = 'btn'
+    bank = 'bjb'
     pars = OptionParser()
-    help_module = 'default {m}'.format(m=module_name)
-    help_bank = 'default {b}'.format(b=bank)
-    pars.add_option('-m', '--module', default=module_name, help=help_module)
+    help_bank = 'default {b}. Contoh lain: mitracomm,14 dimana 14 adalah BCA'
+    help_bank = help_bank.format(b=bank)
     pars.add_option('-i', '--invoice-id')
     pars.add_option('-b', '--bank', default=bank, help=help_bank)
     option, remain = pars.parse_args(argv)
@@ -88,12 +101,18 @@ def get_option(argv):
         return
     return option
 
+
+def split_bank(s):
+    t = s.split(',')
+    if t[1:]:
+        streamer_name = t[0]
+        bank_id = int(t[1])
+    else:
+        streamer_name = s
+        bank_id = 0
+    return streamer_name, bank_id
+
+
 def main(argv):
-    option = get_option(argv)
-    if not option:
-        return
-    module_name = option.module
-    invoice_id = option.invoice_id
-    conf = dict(name=option.bank, ip='127.0.0.1')
-    test = TestInquiry(module_name, invoice_id, conf)
+    test = TestInquiry(argv)
     test.run()

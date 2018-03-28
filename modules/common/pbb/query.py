@@ -1,5 +1,5 @@
 from tools import DbTransactionID
-from sismiop.tools import sppt2nop
+from sismiop.db_tools import sppt2nop
 from sismiop.query import (
     Query as SismiopQuery,
     Reversal as SismiopReversal,
@@ -13,27 +13,35 @@ class NTP(DbTransactionID):
 
 
 class Inquiry(SismiopQuery):
-    def invoice2inquiry(self, sppt):
-        q = self.DBSession.query(self.models.Inquiry).filter_by(propinsi=sppt.kd_propinsi,
-                kabupaten=sppt.kd_dati2, kecamatan=sppt.kd_kecamatan,
-                kelurahan=sppt.kd_kelurahan, blok=sppt.kd_blok,
-                urut=sppt.no_urut, jenis=sppt.kd_jns_op,
-                tahun=sppt.thn_pajak_sppt)
+    def nop2inquiry(
+            self, propinsi, kabupaten, kecamatan, kelurahan, blok, urut,
+            jenis, tahun):
+        q = self.DBSession.query(self.models.Inquiry).filter_by(
+                propinsi=propinsi, kabupaten=kabupaten, kecamatan=kecamatan,
+                kelurahan=kelurahan, blok=blok, urut=urut, jenis=jenis,
+                tahun=tahun)
         q = q.order_by(self.models.Inquiry.id.desc())
         return q.first()
 
+    def invoice2inquiry(self, sppt):
+        return self.nop2inquiry(
+                sppt.kd_propinsi, sppt.kd_dati2,
+                sppt.kd_kecamatan, sppt.kd_kelurahan, sppt.kd_blok,
+                sppt.no_urut, sppt.kd_jns_op, sppt.thn_pajak_sppt)
+
     def invoice2payment(self, sppt):
-        q = self.DBSession.query(self.models.Payment).filter_by(propinsi=sppt.kd_propinsi,
-                kabupaten=sppt.kd_dati2, kecamatan=sppt.kd_kecamatan,
-                kelurahan=sppt.kd_kelurahan, blok=sppt.kd_blok,
-                urut=sppt.no_urut, jenis=sppt.kd_jns_op,
+        q = self.DBSession.query(self.models.Payment).filter_by(
+                propinsi=sppt.kd_propinsi, kabupaten=sppt.kd_dati2,
+                kecamatan=sppt.kd_kecamatan, kelurahan=sppt.kd_kelurahan,
+                blok=sppt.kd_blok, urut=sppt.no_urut, jenis=sppt.kd_jns_op,
                 tahun=sppt.thn_pajak_sppt)
         q = q.order_by(self.models.Payment.ke.desc())
         return q.first()
 
     def inq2bayar(self, inq):
-        q = self.query_pembayaran(inq.propinsi, inq.kabupaten, inq.kecamatan,
-                inq.kelurahan, inq.blok, inq.urut, inq.jenis, str(inq.tahun))
+        q = self.query_pembayaran(
+                inq.propinsi, inq.kabupaten, inq.kecamatan, inq.kelurahan,
+                inq.blok, inq.urut, inq.jenis, str(inq.tahun))
         q = q.order_by(self.models.Pembayaran.pembayaran_sppt_ke.desc())
         return q.first()
 
@@ -44,11 +52,11 @@ class Inquiry(SismiopQuery):
         inv = calc.invoice
         inq_id = self.inquiry_id()
         nop = sppt2nop(inv)
-        inq = self.models.Inquiry(id=inq_id, nop=nop, propinsi=inv.kd_propinsi,
+        inq = self.models.Inquiry(
+                id=inq_id, nop=nop, propinsi=inv.kd_propinsi,
                 kabupaten=inv.kd_dati2, kecamatan=inv.kd_kecamatan,
                 kelurahan=inv.kd_kelurahan, blok=inv.kd_blok, urut=inv.no_urut,
-                jenis=inv.kd_jns_op, tahun=inv.thn_pajak_sppt,
-                tgl=calc.kini)
+                jenis=inv.kd_jns_op, tahun=inv.thn_pajak_sppt, tgl=calc.kini)
         inq.stan = from_iso.get_stan()
         inq.pengirim = from_iso.get_bank_id()
         inq.transmission = from_iso.get_transmission()
@@ -58,14 +66,19 @@ class Inquiry(SismiopQuery):
         inq.persen_denda = persen_denda
         inq.jatuh_tempo = inv.tgl_jatuh_tempo_sppt
         inq.bulan_tunggakan = calc.bln_tunggakan
+        self.before_save(calc, inq)
         self.DBSession.add(inq)
         self.DBSession.flush()
         return inq
 
+    def before_save(self, calc, inq):
+        pass
+
 
 class Payment(Inquiry):
-    def create_payment(self, inq, total_bayar, urutan_bayar, prefix_ntp,
-            bank_fields, from_iso):
+    def create_payment(
+            self, inq, total_bayar, urutan_bayar, prefix_ntp, bank_fields,
+            from_iso):
         payment_id = self.create_ntp(prefix_ntp)
         payment = Payment(id=payment_id)
         payment.inquiry_id = inq.id
@@ -77,7 +90,7 @@ class Payment(Inquiry):
         payment.urut = inq.urut
         payment.jenis = inq.jenis
         payment.tahun = inq.tahun
-        payment.ke = urutan_bayar 
+        payment.ke = urutan_bayar
         payment.channel = from_iso.get_channel()
         payment.ntb = from_iso.get_ntb()
         payment.iso_request = ISO8583.getRawIso(self.from_iso).upper()

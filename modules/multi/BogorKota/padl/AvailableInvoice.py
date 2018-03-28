@@ -22,7 +22,8 @@ engine = create_engine(db_url)
 Base.metadata.bind = engine
 DBSession.configure(bind=engine)
 models = Models(Base, db_schema)
-query = Query(models, DBSession)
+iso_models = None
+query = Query(models, iso_models, DBSession)
 
 
 class AvailableInvoice(object):
@@ -34,7 +35,8 @@ class AvailableInvoice(object):
 
     def show(self, option):
         sample_count = int(option.sample_count)
-        q = DBSession.query(models.Invoice.tahun, models.Invoice.sptno,
+        q = DBSession.query(
+                models.Invoice.tahun, models.Invoice.sptno,
                 models.Rekening.rekeningnm, models.Rekening.rekeningkd)
         q = q.filter(models.Invoice.pajak_id == models.Pajak.id)
         q = q.filter(models.Pajak.rekening_id == models.Rekening.id)
@@ -48,7 +50,6 @@ class AvailableInvoice(object):
             q = q.filter(models.Invoice.jatuhtempotgl >= date.today())
         q = q.filter(models.Invoice.pajak_terhutang > 0)
         q = q.order_by(models.Invoice.pajak_terhutang)
-        #q = q.order_by(models.Invoice.tahun.desc(), models.Invoice.sptno.desc())
         offset = -1
         count = 0
         while True:
@@ -62,19 +63,24 @@ class AvailableInvoice(object):
             invoice_id['Tahun'] = row.tahun
             invoice_id['SPT No'] = row.sptno
             invoice_id_raw = invoice_id.get_raw()
-            calc = CalculateInvoice(models, DBSession, invoice_id_raw,
+            calc = CalculateInvoice(
+                    models, iso_models, DBSession, invoice_id_raw,
                     persen_denda)
             if calc.total < 1:
                 continue
             count += 1
-            if calc.invoice.jatuhtempotgl:
-                jatuh_tempo = calc.invoice.jatuhtempotgl.strftime('%d-%m-%Y')
-            else:
-                jatuh_tempo = 'tidak ada'
-            msg = '#{no}/{count} {id} {nama_rek} {kode_rek} Rp {tagihan} + '\
-                  'Rp {denda} = Rp {total}, jatuh tempo {jatuh_tempo}'
-            msg = msg.format(no=count, id=invoice_id_raw, nama_rek=row.rekeningnm,
-                    kode_rek=row.rekeningkd, tagihan=calc.tagihan,
-                    denda=calc.denda, total=calc.total, count=sample_count,
-                    jatuh_tempo=jatuh_tempo)
-            print(msg)
+            self.on_print(option, count, invoice_id_raw, row, calc)
+
+    def on_print(self, option, count, invoice_id_raw, row, calc):
+        if calc.invoice.jatuhtempotgl:
+            jatuh_tempo = calc.invoice.jatuhtempotgl.strftime('%d-%m-%Y')
+        else:
+            jatuh_tempo = 'tidak ada'
+        msg = '#{no}/{count} {id} {nama_rek} {kode_rek} Rp {tagihan} + '\
+              'Rp {denda} = Rp {total}, jatuh tempo {jatuh_tempo}'
+        msg = msg.format(
+                no=count, id=invoice_id_raw, nama_rek=row.rekeningnm,
+                kode_rek=row.rekeningkd, tagihan=calc.tagihan,
+                denda=calc.denda, total=calc.total, count=option.sample_count,
+                jatuh_tempo=jatuh_tempo)
+        print(msg)

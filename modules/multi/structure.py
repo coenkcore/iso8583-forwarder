@@ -41,6 +41,7 @@ RC_INSUFFICIENT_FUND = '51'
 ####################
 # Response Message #
 ####################
+ERR_NOT_ALLOWED = 'Bank ID {bank_id} tidak diperkenankan'
 ERR_NOT_AVAILABLE = 'Invoice ID {invoice_id} tidak ada'
 ERR_ALREADY_PAID = 'Invoice ID {invoice_id} sudah dibayar'
 ERR_ALREADY_PAID_2 = 'Invoice ID {invoice_id} sudah lunas, '\

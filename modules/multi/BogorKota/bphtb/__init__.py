@@ -16,11 +16,11 @@ from query import (
     NTP,
     Reversal,
     )
-from structure import INVOICE_ID
-from conf import (
+from .conf import (
     db_url,
     transaction_schema,
     area_schema,
+    iso_schema,
     db_pool_size,
     db_max_overflow,
     persen_denda,
@@ -35,72 +35,73 @@ Base.metadata.bind = engine
 session_factory = sessionmaker()
 DBSession = scoped_session(session_factory)
 DBSession.configure(bind=engine)
-models = Models(Base, transaction_schema, area_schema)
+models = Models(Base, transaction_schema, area_schema, iso_schema)
 query = Query(models, DBSession)
 
 
 class BaseResponse(object):
     def __init__(self, parent):
         self.parent = parent
-        self.invoice_id_raw = parent.from_iso.get_invoice_id()
-        self.invoice_id = FixLength(self.get_invoice_id_structure())
-        self.invoice_id.set_raw(self.invoice_id_raw)
-
-    def get_invoice_id_structure(self):
-        return INVOICE_ID
 
     def is_transaction_owner(self, iso_pay):
         conf = host[self.parent.conf['name']]
         return iso_pay.bank_id == conf['id']
+
+    def is_allowed(self):
+        conf = host[self.parent.conf['name']]
+        if 'ids' in conf:
+            if self.parent.get_bank_id() not in conf['ids']:
+                return self.parent.ack_not_allowed()
+        return True
 
     def commit(self):
         DBSession.commit()
         self.parent.ack()
 
 
-
 class InquiryResponse(BaseResponse):
     def __init__(self, parent):
         BaseResponse.__init__(self, parent)
-        self.calc = CalculateInvoice(models, DBSession, self.invoice_id,
-                        persen_denda)
+        cls = self.get_calc_cls()
+        raw = parent.from_iso.get_invoice_id()
+        self.calc = cls(models, DBSession, raw, persen_denda)
         module_conf = host[self.parent.conf['name']]
         self.parent.conf.update(module_conf)
         self.invoice_profile = FixLength(self.get_invoice_profile_structure())
 
-    def get_invoice_id_structure(self):
-        return INVOICE_ID
+    def get_calc_cls(self):
+        return CalculateInvoice
 
     def get_invoice_profile_structure(self):
         return INVOICE_PROFILE
 
     def init_invoice_profile(self):
         self.invoice_profile.from_dict({
-            'kode pajak': 'BPHTB', 
+            'kode pajak': 'BPHTB',
             'nama pajak': 'BEA PEROLEHAN HAK ATAS TANAH DAN BANGUNAN',
             })
 
     def set_invoice_profile(self):
         invoice = self.calc.invoice
         self.invoice_profile.from_dict({
-            'npwpd': invoice.wp_npwp, 
-            'nama' : invoice.wp_nama, 
-            'alamat': invoice.wp_alamat, 
+            'npwpd': invoice.wp_npwp,
+            'nama': invoice.wp_nama,
+            'alamat': invoice.wp_alamat,
             'tagihan': self.calc.tagihan,
-            'denda': self.calc.denda, 
+            'denda': self.calc.denda,
             'jumlah': self.calc.total,
-            'jenis perolehan' : invoice.perolehan_id,
+            'jenis perolehan': invoice.perolehan_id,
             'nilai perolehan': invoice.npop,
-            'rt wp': invoice.wp_rt, 
-            'rw wp': invoice.wp_rw, 
-            'kelurahan wp': invoice.wp_kelurahan, 
-            'kecamatan wp': invoice.wp_kecamatan, 
+            'rt wp': invoice.wp_rt,
+            'rw wp': invoice.wp_rw,
+            'kelurahan wp': invoice.wp_kelurahan,
+            'kecamatan wp': invoice.wp_kecamatan,
             'kota wp': invoice.wp_kota,
             'tahun pajak': invoice.tahun,
             'nik': invoice.wp_identitas,
             'luas tanah': invoice.bumi_luas,
             'luas bangunan': invoice.bng_luas,
-            'alamat op' : invoice.op_alamat,
+            'alamat op': invoice.op_alamat,
             })
         self.set_jatuh_tempo()
         self.set_kode_pos_wp()
@@ -123,6 +124,8 @@ class InquiryResponse(BaseResponse):
         return True
 
     def response(self):
+        if not self.is_allowed():
+            return
         self.init_invoice_profile()
         if not self.is_valid():
             return self.parent.set_amount(0)
@@ -131,7 +134,8 @@ class InquiryResponse(BaseResponse):
 
     def set_jatuh_tempo(self):
         if self.calc.invoice.tgl_jatuh_tempo:
-            self.set_invoice_profile_('jatuh tempo',
+            self.set_invoice_profile_(
+                'jatuh tempo',
                 self.calc.invoice.tgl_jatuh_tempo.strftime('%d%m%Y'))
 
     def set_kode_pos_wp(self):
@@ -162,7 +166,7 @@ class InquiryResponse(BaseResponse):
 
     def ack_already_paid(self):
         iso_pay = self.calc.get_iso_payment()
-        if iso_pay and iso_pay.bank_id == self.parent.conf['id']:
+        if iso_pay and iso_pay.bank_id == self.parent.get_bank_id():
             ntp = iso_pay.ntp
         else:
             ntp = ''
@@ -185,6 +189,8 @@ def create_ntp():
 
 class PaymentResponse(InquiryResponse):
     def response(self):
+        if not self.is_allowed():
+            return
         if not self.is_valid():
             return
         ntp = create_ntp()
@@ -211,14 +217,14 @@ class PaymentResponse(InquiryResponse):
         pay.jam = self.parent.get_transaction_time()
         pay.seq = self.parent.get_sequence()
         pay.transno = self.parent.get_ntb()
-        pay.cabang = cabang['kode'] 
-        pay.users = cabang['user'] 
-        pay.bankid = self.parent.conf['id']
+        pay.cabang = cabang['kode']
+        pay.users = cabang['user']
+        pay.bankid = self.parent.get_bank_id()
         pay.txs = self.calc.invoice_id['Kode']
         pay.sspd_id = inv.id
         pay.tahun = inv.tahun
         pay.thn_pajak_sppt = inv.thn_pajak_sppt
-        pay.notaris = cust.nama 
+        pay.notaris = cust.nama
         pay.bayar = self.calc.total
         pay.denda = self.calc.denda
         pay.bphtbjeniskd = inv.perolehan_id
@@ -275,7 +281,7 @@ class PaymentResponse(InquiryResponse):
         iso_pay.stan = from_iso.get_stan()
         iso_pay.ntb = from_iso.get_ntb()
         iso_pay.ntp = ntp
-        iso_pay.bank_id = self.parent.conf['id']
+        iso_pay.bank_id = self.parent.get_bank_id()
         iso_pay.channel_id = from_iso.get_channel()
         iso_pay.bank_ip = self.parent.get_bank_ip()
         DBSession.add(iso_pay)
@@ -293,9 +299,12 @@ def payment(parent):
 class ReversalResponse(BaseResponse):
     def __init__(self, parent):
         BaseResponse.__init__(self, parent)
-        self.rev = Reversal(models, DBSession, self.invoice_id)
+        raw = parent.from_iso.get_invoice_id()
+        self.rev = Reversal(models, DBSession, raw)
 
     def response(self):
+        if not self.is_allowed():
+            return
         if not self.rev.invoice:
             return self.parent.ack_payment_not_found()
         if not self.rev.is_paid():
@@ -314,5 +323,3 @@ class ReversalResponse(BaseResponse):
 def reversal(parent):
     rev = ReversalResponse(parent)
     rev.response()
-
-
