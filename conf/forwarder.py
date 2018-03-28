@@ -1,6 +1,6 @@
 host = {
     'bjb': {
-        'module': 'multi',
+        'module': 'bppt',
         'streamer': 'bjb',
         #'ip': '10.31.224.104',	# devel
         #'port': 9591,		# devel 

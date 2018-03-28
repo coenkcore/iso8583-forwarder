@@ -25,8 +25,8 @@ import pytz
 import locale
 import csv
 
-
-locale.setlocale(locale.LC_ALL, 'id_ID.UTF-8') 
+from config import localization 
+locale.setlocale(locale.LC_ALL, localization) 
 
 
 #######
