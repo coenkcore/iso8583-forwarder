@@ -1,0 +1,1 @@
+#!/bin/bashpython /home/aagusti/apps/h2h/iso8583-forwarder/iso8583-forwarder/iso8583-forwarder \  --log-file=/home/aagusti/apps/h2h/iso8583-forwarder/log/bppt-tangsel --pid-file=/home/aagusti/apps/h2h/iso8583-forwarder/tmp/bppt-tangsel.pid

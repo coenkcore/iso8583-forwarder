@@ -1,8 +1,0 @@
-#!/bin/sh
-cd /home/h2h/bca/iso8583-forwarder
-python iso8583-forwarder.py \
-    --pid-file=/home/h2h/bca/tmp/iso8583-forwarder-multi-bca.pid \
-    --log-dir=/home/h2h/bca/log/iso8583-forwarder-multi-bca \
-    "$@"
-~
-~

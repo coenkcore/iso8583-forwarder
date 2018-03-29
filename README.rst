@@ -8,6 +8,9 @@ dengan fitur:
 - Multi streamer, dapat menangani berbagai network header.
 - Multi modul, contoh: pbb, bphtb, padl, dan multi.
 
+
+Jika OS belum mendukung systemd tambahkan parameter --service
+
 Buatlah file konfigurasinya terlebih dahulu, misalnya
 ``conf/forwarder-bogor-kota.py``::
 
@@ -74,5 +77,11 @@ terlihat. Jika nanti Anda menjalankannya dengan `background mode` maka gunakan
 ``tail`` untuk memantau::
 
     tail -f logs/main.log
+
+Instalasi
+===================
+Jalan file install.py
+Masuk ke folder iso8583-forwarder
+#python install.py -m module_name -s sub_module -u user 
 
 Selamat mencoba.

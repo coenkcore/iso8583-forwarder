@@ -25,7 +25,7 @@ import pytz
 import locale
 import csv
 
-from config import localization 
+from config import localization
 locale.setlocale(locale.LC_ALL, localization) 
 
 
