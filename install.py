@@ -69,7 +69,7 @@ def create_service(user, home, app_name):
     os.chmod(filename, 0755)
 
   
-def crete_systemd(user, home, app_name):
+def create_systemd(user, home, app_name):
     pid_file = "%s/tmp/%s.pid" % (home, app_name)
     log_file = "%s/log/%s" % (home, app_name)
     filename = "/etc/systemd/system/%s.service" % app_name
@@ -95,10 +95,10 @@ def crete_systemd(user, home, app_name):
 
 
 def create_bin(user, home, app_name):
-    filename = "/usr/local/bin/iso8583-forwarder-%s" % app_name
+    filename = "/usr/local/bin/%s" % app_name
     with open(filename, 'wb') as f:
         f.write('#!/bin/bash\n')
-        f.write('su - {user} -c "{home}/bin/start-iso8583-forwarder-{app_name}\n"'.format(user=user, home=home, app_name=app_name))
+        f.write('su - {user} -c "{home}/bin/start-{app_name}\n"'.format(user=user, home=home, app_name=app_name))
         f.close()
         
     os.chmod(filename, 0755)
@@ -136,7 +136,7 @@ def create_start(user, app_name, _here, home):
     filename = "%s/bin/%s" % (home, app_name)
     with open(filename, 'wb') as f:
         f.write('#!/bin/python\n')
-        f.write("{home}/iso8583-forwarder/iso8583-forwarder.py \\\n".format(home=home))
+        f.write("{home}/bin/start-{app_name} \\\n".format(home=home, app_name))
         f.close()
     os.chmod(filename, 0755)
 
