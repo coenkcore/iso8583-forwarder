@@ -135,7 +135,7 @@ def create_start(user, app_name, _here, home):
     #create bin buat service
     filename = "%s/bin/%s" % (home, app_name)
     with open(filename, 'wb') as f:
-        f.write('#!/bin/python\n')
+        f.write('#!/usr/bin/python\n')
         f.write("{home}/bin/start-{app_name} \\\n".format(home=home, app_name))
         f.close()
     os.chmod(filename, 0755)
@@ -158,7 +158,7 @@ def main(argv):
         print ("-m module -s sub -u user ")
         return 
         
-    _here = '/home/aagusti/apps/h2h/iso8583-forwarder' #os.path.dirname(__file__)
+    _here = os.getcwd() #'/home/aagusti/apps/h2h/iso8583-forwarder' #os.path.dirname(__file__)
     home = os.path.dirname(_here)
     app_name = "iso8583-forwarder-"+option.module+'-'+option.sub
     print('Starting Installation')
