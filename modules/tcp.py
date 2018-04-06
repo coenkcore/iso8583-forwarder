@@ -277,6 +277,7 @@ class ServerThread(BaseDaemon):
 
 def stop_daemon(pid_file):
     pid = demon.isLive(pid_file)
+    print(pid, pid_file)
     if not pid:
         return
     print('kill %d by signal' % pid)
@@ -285,6 +286,7 @@ def stop_daemon(pid_file):
     while i < 5:
         sleep(1)
         i += 1
+        print i
         if not demon.isLive(pid_file):
             return
     print('kill %d by force' % pid)
