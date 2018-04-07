@@ -390,6 +390,7 @@ pid_file = os.path.realpath(option.pid_file)
 log_dir = os.path.realpath(option.log_dir)
 
 if option.stop:
+    print('Stop Daemon')
     stop_daemon(pid_file)
     sys.exit()
 
@@ -456,6 +457,7 @@ for name in conf.host:
         if ip_port in ip_conf:
             print('IP {ip} port {port} ganda. Perbaiki konfigurasi.')
             sys.exit()
+        print('Client from IP {ip} port {port} ')
     ip_conf[ip_port] = cfg
 
 servers = {}

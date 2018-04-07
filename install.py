@@ -16,6 +16,20 @@ def create_bat(home, app_name):
         f.write("cd %folder%\iso8583-forwarder\n")
         f.write("python iso8583-forwarder.py --pid-file=%%tmp_file%% --log-dir=%%log_file%% %%*")
         f.close()
+def create_log_rotate(home, app_name):
+    log_file = "%s/log/%s" % (home, app_name)
+    filename = "/etc/logrotate.d/%s" % app_name
+    with open(filename, 'wb') as f:
+        f.write("%s/*.log {\n" % log_file)
+        f.write("      weekly\n")
+        f.write("      rotate 10\n")
+        f.write("      copytruncate\n")
+        f.write("      delaycompress\n")
+        f.write("      compress\n")
+        f.write("      notifempty\n")
+        f.write("      missingok\n")
+        f.write("      su root root\n")
+        f.close()
 
 def create_service(user, home, app_name):
     pid_file = "%s/tmp/%s.pid" % (home, app_name)
@@ -98,7 +112,7 @@ def create_bin(user, home, app_name):
     filename = "/usr/local/bin/%s" % app_name
     with open(filename, 'wb') as f:
         f.write('#!/bin/bash\n')
-        f.write('su - {user} -c "{home}/bin/start-{app_name}\n"'.format(user=user, home=home, app_name=app_name))
+        f.write('su - {user} -c "{home}/bin/start-{app_name} $1"\n'.format(user=user, home=home, app_name=app_name))
         f.close()
         
     os.chmod(filename, 0755)
@@ -128,7 +142,7 @@ def create_start(user, app_name, _here, home):
         f.write("cd {home}/iso8583-forwarder\n".format(home=home))
         f.write("python {home}/iso8583-forwarder/iso8583-forwarder.py \\\n".format(home=home))
         f.write("    --log-dir={log_file} \\\n".format(log_file=log_file))
-        f.write("    --pid-file={pid_file} \n".format(pid_file=pid_file))
+        f.write("    --pid-file={pid_file} $1\n".format(pid_file=pid_file))
         f.close()
     os.chmod(filename, 0755)
     
@@ -136,7 +150,7 @@ def create_start(user, app_name, _here, home):
     filename = "%s/bin/%s" % (home, app_name)
     with open(filename, 'wb') as f:
         f.write('#!/usr/bin/python\n')
-        f.write("{home}/bin/start-{app_name} \\\n".format(home=home, app_name))
+        f.write("{home}/bin/start-{app_name} \\\n".format(home=home, app_name=app_name))
         f.close()
     os.chmod(filename, 0755)
 
@@ -172,10 +186,10 @@ def main(argv):
     if option.service:
         create_service(option.user, home, app_name)
     else:
-        crete_systemd(option.user, home, app_name)
+        create_systemd(option.user, home, app_name)
         
     create_bat(home, app_name)
-    
+    create_log_rotate(home, app_name)
     print('Berhasil Install.')
 
 argv = sys.argv

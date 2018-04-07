@@ -22,7 +22,8 @@ class OtherModels(object):
         class Perizinan(Base, CommonModel):
             __tablename__ = 'trperizinan'
             id = Column(Integer, primary_key=True) 
-            n_perizinan = Column(String(128)) 
+            n_perizinan = Column(String(128))
+            initial = Column(String(128))
             
         class Pemohon(Base, CommonModel): #B
             __tablename__ = 'tmpemohon'
@@ -34,12 +35,15 @@ class OtherModels(object):
             id = Column(Integer, primary_key=True) 
             alamatizin = Column(String(128)) 
             trkelurahan_id = Column(Integer) 
-            tmpemohon_id = Column(Integer, ForeignKey(Pemohon.id)) 
+            tmpemohon_id = Column(Integer, ForeignKey(Pemohon.id))
+            trperizinan_id = Column(Integer, ForeignKey(Perizinan.id))
+
             
         class Invoice(Base, CommonModel):
             __tablename__ = 'tmretribusi'
             id = Column(Integer, primary_key=True) 
             kd_bayar = Column(String(32)) 
+            no_skrd = Column(String(32)) 
             pendaftaran_id = Column(BigInteger)
             jumlah = Column(BigInteger)
             date_skrd = Column(DateTime(timezone=False))
@@ -55,7 +59,7 @@ class OtherModels(object):
             cara_bayar = Column(String(128))
             denda_masaberlaku = Column(Integer)
             tmpermohonan_id = Column(Integer, ForeignKey(Permohonan.id))
-            trperizinan_id = Column(Integer, ForeignKey(Perizinan.id))
+            #trperizinan_id = Column(Integer, ForeignKey(Perizinan.id))
             
         class Payment(Invoice):
             pass

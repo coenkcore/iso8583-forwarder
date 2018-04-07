@@ -18,7 +18,8 @@ models = OtherModels(Base)
 class AvailableInvoice(object):
     def show(self, option):
         sample_count = int(option.sample_count)
-        q = DBSession.query(models.Invoice).filter(models.Invoice.kd_bayar != None)
+        q = DBSession.query(models.Invoice).filter(models.Invoice.kd_bayar != None).\
+                  filter(models.Invoice.kd_bayar != '')
         if option.min:
             n = int(option.min)
             q = q.filter(models.Invoice.nominal >= n)
@@ -28,6 +29,7 @@ class AvailableInvoice(object):
         q = q.order_by(models.Invoice.nominal)
         offset = -1
         count = 0
+        print('START *************')
         while True:
             if count >= sample_count:
                 break
@@ -42,6 +44,7 @@ class AvailableInvoice(object):
             msg = '#{no}/{count} {id} Rp {total}'.format(no=count,
                     id=row.kd_bayar, total=calc.tagihan, count=sample_count)
             print(msg)
+        print('SELESAI *************')
 
     def add_option(self, pars):
         pars.add_option('', '--min', help='Tagihan minimum')

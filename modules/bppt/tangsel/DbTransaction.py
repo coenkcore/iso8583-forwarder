@@ -80,7 +80,7 @@ class DbTransaction(Transaction):
     # Override
     def set_invoice_profile(self):
         invoice = self.calc.invoice
-        izin = query.get_izin_by_name(invoice.n_perizinan)
+        izin = query.get_izin_by_name(invoice.initial)
         self.invoice_profile.from_dict({
             'No Bayar': re.sub('\D', '', invoice.kd_bayar),
             'Kode Izin': izin.id,

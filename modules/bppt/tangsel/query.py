@@ -21,11 +21,11 @@ class OtherQuery(BaseQuery):
         return self.DBSession.query(Inv.id, Inv.kd_bayar, Inv.jumlah,
                   Inv.date_skrd, Inv.date_expire, Inv.nominal, Inv.denda,
                   Inv.jum_bayar, Inv.ref_bayar, Inv.is_bayar, Inv.date_bayar,
-                  Inv.tmpermohonan_id, Izin.n_perizinan,
+                  Inv.tmpermohonan_id, Izin.n_perizinan, Izin.initial,
                   Pemohon.n_pemohon.label('nama_wp'),
                   Permohonan.alamatizin.label('lokasi_izin')
                   ).\
-            join(Izin).join(Permohonan).join(Pemohon).\
+            join(Permohonan).join(Izin).join(Pemohon).\
             filter(Inv.kd_bayar==invoice_id_raw)
 
     def get_payment(self, invoice):
@@ -60,12 +60,11 @@ class CalculateInvoice(Invoice):
         if self.invoice:
             self.hitung()
             self.paid = self.is_paid()
-            print self.paid
             
     def hitung(self):
         self.tagihan = self.invoice.jumlah and round_up(self.invoice.jumlah) or 0
         bulan, denda = hitung_denda(self.tagihan, self.invoice.date_expire, persen_denda)
-        self.denda = denda
+        self.denda = round_up(denda)
         self.bulan = bulan
         self.total = int(self.tagihan) + int(self.denda)
 
@@ -74,8 +73,8 @@ class CalculateInvoice(Invoice):
             return True
         
         #TODO apa harus dihitung juga denda dan jum_bayar
-        nominal = self.invoice.nominal  and round_up(self.invoice.nominal) or 0
-        return nominal >= self.tagihan
+        #nominal = self.invoice.nominal  and round_up(self.invoice.nominal) or 0
+        #return nominal >= self.tagihan
 
 
 FIELD_ARSIP = ('no_ssrd', 'date_ssrd', 'no_sts', 'date_sts', 'jumlah_bayar',

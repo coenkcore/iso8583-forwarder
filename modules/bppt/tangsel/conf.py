@@ -1,5 +1,8 @@
-db_url = 'postgresql://aagusti:a@localhost/bppt'
-other_db_url = 'postgresql://aagusti:a@localhost/bppt'
+db_url = 'postgresql://h2h:h2hImbTsl@localhost/h2h'
+#db_url = 'mysql://imbh2h:i5sT1gF4R@103.219.112.54'
+#other_db_url = 'postgresql://h2h:h2hImbTsl@localhost/h2h'
+#other_db_url = 'mysql://imbh2h:i5sT1gF4R@103.219.112.54/perizinan2018'
+other_db_url = 'mysql://imbh2h:i5sT1gF4R@103.219.112.54/demoizinsimponie'
 
 # Tuning
 # http://docs.sqlalchemy.org/en/rel_0_9/core/pooling.html
