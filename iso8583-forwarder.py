@@ -278,6 +278,8 @@ def check_connection():
                 hosts.remove(index)
                 break
             continue
+        if cfg['listen']:
+            continue
         host = Client(cfg['ip'], cfg['port'])
         host.start()
         sleep(5)
