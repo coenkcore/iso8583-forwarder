@@ -3,6 +3,7 @@ import sys
 import traceback
 import imp
 import signal
+import gc
 try:
     from StringIO import StringIO
 except ImportError:
@@ -27,6 +28,10 @@ from tcp import (
     )
 from tools import print_log
 from streamer_loader import get_streamer_module
+
+
+# gc.set_debug(gc.DEBUG_LEAK)
+gc.enable()
 
 
 def join_ip_port(ip, port):
@@ -93,9 +98,7 @@ class Common(object):
             f.close()
 
     def after_loop(self):
-        if not self.connected_time:
-            return
-        hosts.remove(self)
+        pass
 
     def on_receive_raw(self, raw):
         self.job.on_receive_raw(raw)
@@ -243,18 +246,37 @@ class Client(ClientThread, Common):
 # Other #
 #########
 def out(sig=None, func=None):
+    if sig:
+        reason = 'Kill by signal {}'.format(sig)
+    else:
+        reason = 'Kill by keyboard interrupt'
+    for port in servers:
+        server_thread = servers[listen_port]
+        server_thread.stop(reason)
+        sleep(1)
     if running:
         del running[0]  # Akhiri loop utama
-    for host in hosts:
+    for ip_port, host in hosts:
         host.close_connection('killed')
+        sleep(1)
 
 
 def check_connection():
     for ip_port in ip_conf:
         cfg = ip_conf[ip_port]
-        if cfg['listen']:
-            continue
         if ip_port in hosts:
+            index = -1
+            while True:
+                index += 1
+                if not hosts[index:]:
+                    break
+                this_ip_port, host = hosts[index]
+                if this_ip_port != ip_port:
+                    continue
+                if host.running:
+                    continue
+                hosts.remove(index)
+                break
             continue
         host = Client(cfg['ip'], cfg['port'])
         host.start()
@@ -262,19 +284,19 @@ def check_connection():
 
 
 def check_timeout():
-    for host in hosts:
+    for ip_port, host in hosts:
         if host.running:
             host.check_timeout()
 
 
 def check_job():
-    for host in hosts:
+    for ip_port, host in hosts:
         if host.running:
             host.check_job()
 
 
 def stop_thread(stopped_name=None):
-    for host in hosts:
+    for ip_port, host in hosts:
         if stopped_name:
             if stopped_name != host.conf['name']:
                 continue
@@ -304,35 +326,69 @@ def watch_stop_dir():
 
 class Host(object):
     def __init__(self):
-        self.hosts = {}
+        self.hosts = []
+        self.unused = []
+
+    def count(self, ip_port):
+        count = 0
+        for this_ip_port, this_host in self.hosts:
+            if this_ip_port == ip_port:
+                count += 1
+        return count
+
+    def get_first(self, ip_port):
+        index = -1
+        for this_ip_port, host in self.hosts:
+            index += 1
+            if this_ip_port == ip_port:
+                return host, index
+        return None, None
+
+    def get_last(self, ip_port):
+        index = -1
+        found_host = found_index = None
+        for this_ip_port, host in self.hosts:
+            index += 1
+            if this_ip_port == ip_port:
+                found_host = host
+                found_index = index
+        return found_host, found_index
 
     def add(self, host):
         ip_port = join_ip_port(host.remote_host, host.port)
+        old_host, index = self.get_first(ip_port)
         host.conf = ip_conf[ip_port]
-        count = ip_port in self.hosts and 2 or 1
+        self.hosts.append([ip_port, host])
+        count = self.count(ip_port)
         host.log_info('connected, currently {c} connections'.format(c=count))
-        if ip_port in self.hosts:
-            old_host = self.hosts[ip_port]
-            old_host.close_connection('new connection found')
-            self.remove(old_host, True)
-        self.hosts[ip_port] = host
+        if not old_host:
+            return
+        old_host.close_connection('new connection found')
+        sleep(2)
 
-    def remove(self, host, reconnect=False):
-        ip = host.remote_host
-        if ip in self.hosts:
-            del self.hosts[ip]
-        count = reconnect and 1 or 0
+    def remove(self, index):
+        ip_port, host = self.hosts[index]
+        del self.hosts[index][0]
+        del self.hosts[index][0]
+        del self.hosts[index]
+        sleep(0.1)
+        count = self.count(ip_port)
         host.log_info('closed, currently %d connections' % count)
 
     def __iter__(self):  # for loop
-        for ip_port in self.hosts:
-            yield self.hosts[ip_port]
+        for ip_port, host in self.hosts:
+            yield [ip_port, host]
 
     def __contains__(self, ip_port):  # in operator
-        return ip_port in self.hosts
+        host, index = self.get_first(ip_port)
+        return index > -1
 
-    def __getitem__(self, ip_port):
-        return self.hosts[ip_port]
+    def __getitem__(self, s):
+        if isinstance(s, str):  # key like dictionary
+            ip_port = s
+            host, index = self.get_last(ip_port)
+            return host
+        return self.hosts[s]  # slice like list
 
 
 #################
@@ -455,9 +511,10 @@ for name in conf.host:
     else:
         ip_port = join_ip_port(ip, cfg['port'])
         if ip_port in ip_conf:
-            print('IP {ip} port {port} ganda. Perbaiki konfigurasi.')
+            print('IP {} port {} ganda. Perbaiki konfigurasi.'.format(
+                ip, port))
             sys.exit()
-        print('Client from IP {ip} port {port} ')
+        print('Client from IP {} port {}'.format(ip, port))
     ip_conf[ip_port] = cfg
 
 servers = {}

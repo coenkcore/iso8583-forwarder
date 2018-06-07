@@ -54,7 +54,7 @@ class Streamer(object):
 
     # Override please.
     def get(self, raw):
-        return raw 
+        return raw
 
     # Override please.
     def set(self, raw):
@@ -65,7 +65,7 @@ class NetworkDaemon(BaseDaemon):
     def __init__(self):
         self.remote_host = None
         self.network_timeout = 30
-        self.connected_time = None 
+        self.connected_time = None
 
     def process(self, raw):
         return
@@ -89,7 +89,7 @@ class NetworkDaemon(BaseDaemon):
         return 2048
 
     def get_timeout(self):
-        return self.network_timeout 
+        return self.network_timeout
 
     def run(self):
         self.before_loop()
@@ -112,11 +112,11 @@ class NetworkDaemon(BaseDaemon):
             if raw:
                 raw = self.streamer.set(raw)
                 self.send(raw)
-            raw = '' # Siapa tahu ada self.streamer.raw
+            raw = ''  # Siapa tahu ada self.streamer.raw
 
     def receive_raw(self):
         log_message = 'Waiting raw data %d bytes' % self.get_receive_size()
-        if self.last_log_message != log_message: # Hemat log
+        if self.last_log_message != log_message:  # Hemat log
             self.last_log_message = log_message
             self.log_info(log_message)
         try:
@@ -179,6 +179,7 @@ class NetworkDaemon(BaseDaemon):
     def log_message(self, s):
         return '%s %d %s' % (self.remote_host, id(self), s)
 
+
 ##########
 # Server #
 ##########
@@ -231,7 +232,7 @@ class RequestHandler(BaseRequestHandler, NetworkDaemon):
         NetworkDaemon.__init__(self)
         BaseRequestHandler.__init__(self, *args, **kwargs)
 
-    def handle(self): # Override BaseRequestHandler.handle()
+    def handle(self):  # Override BaseRequestHandler.handle()
         self.connected_time = time()
         self.remote_host = self.client_address[0]
         self.port = self.server.server_address[1]
@@ -256,8 +257,8 @@ class ServerThread(BaseDaemon):
         self.log_info('Server thread start')
         self.thread.start()
         self.server_host, self.server_port = self.server.socket.getsockname()
-        self.log_info('Listen at %s port %d pid %d' % (self.server_host,
-            self.server_port, os.getpid()))
+        self.log_info('Listen at %s port %d pid %d' % (
+            self.server_host, self.server_port, os.getpid()))
 
     def stop(self, reason):
         self.server.shutdown(reason)
@@ -296,7 +297,6 @@ def stop_daemon(pid_file):
         print(err)
 
 
-
 ##########
 # Client #
 ##########
@@ -325,13 +325,13 @@ class Client(NetworkDaemon):
         super(Client, self).before_loop()
         if self.connect():
             self.connected_time = time()
-        
-        
+
+
 class ClientThread(Thread, Client):
     def __init__(self, host, port):
         Client.__init__(self, host, port)
         Thread.__init__(self)
         self.daemon = True
 
-    def run(self): # Agar tidak pakai Thread.run()
+    def run(self):  # Agar tidak pakai Thread.run()
         Client.run(self)
