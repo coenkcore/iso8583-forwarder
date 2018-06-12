@@ -11,7 +11,6 @@ from base_models import (
     Base,
     DBSession,
     )
-from pbb.structure import TRANSACTION_BITS
 from .models import (
     Kategori,
     Jenis,
@@ -19,19 +18,26 @@ from .models import (
     Iso,
     Conf,
     )
-from .conf import db_url
+from .conf import (
+    db_url,
+    views,
+    )
 
 
 BASE_VIEW = "SELECT log_iso.id, log.tgl, forwarder, ip, mti, is_send, {bits} "\
         "FROM log_iso, log "\
         "WHERE log_iso.id = log.id AND log.jenis_id = {jenis}"
-PBB_BITS = list(TRANSACTION_BITS.keys())
-PBB_BITS.sort()
-bit_fields = []
-for bit in PBB_BITS:
-    field = 'bit_' + str(bit).zfill(3)
-    bit_fields.append(field)
-PBB_VIEW = BASE_VIEW.format(bits=', '.join(bit_fields), jenis=1)
+
+definition_views = []
+for bits, jenis_id, view_name in views:
+    keys = list(bits.keys())
+    keys.sort()
+    bit_fields = []
+    for bit in bits:
+        field = 'bit_' + str(bit).zfill(3)
+        bit_fields.append(field)
+    v = BASE_VIEW.format(bits=', '.join(bit_fields), jenis=1)
+    definition_views.append((v, view_name))
 
 
 def realpath(filename):
@@ -50,7 +56,8 @@ def main(argv):
     from_csv.restore(realpath('kategori.csv'), Kategori)
     from_csv.restore(realpath('jenis.csv'), Jenis)
     from_csv.restore(realpath('conf.csv'), Conf)
-    view = Table('v_pbb', Base.metadata)
-    definition = text(PBB_VIEW)
-    create_view = CreateView(view, definition, or_replace=True)
-    engine.execute(create_view)
+    for v, view_name in definition_views:
+        view = Table(view_name, Base.metadata)
+        definition = text(v)
+        create_view = CreateView(view, definition, or_replace=True)
+        engine.execute(create_view)

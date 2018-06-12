@@ -1,10 +1,13 @@
 # Gunakan Python 3
 import sys
+import os
 import re
 from hashlib import md5
 from sqlalchemy import create_engine
 from sqlalchemy.exc import IntegrityError
 import pathmagic
+from optparse import OptionParser
+from demon import make_pid
 from base_models import (
     Base,
     DBSession,
@@ -18,8 +21,8 @@ from log.conf import db_url
 
 
 def save():
-    print('{line} -> {ip} {forwarder} {arus} {mti} {bits}'.format(
-        line=r_log.line, ip=ip, forwarder=forwarder, arus=is_send, mti=mti,
+    print('{line} -> {ip} {forwarder} {is_send} {mti} {bits}'.format(
+        line=r_log.line, ip=ip, forwarder=forwarder, is_send=is_send, mti=mti,
         bits=bits))
     r_iso = Iso()
     r_iso.id = conf.nilai_int = r_log.id
@@ -51,6 +54,21 @@ def get_forwarder_name():
     return t[0]
 
 
+default_limit = 10000
+default_pid = 'log2iso.pid'
+help_limit = 'Jumlah record yang diproses di setiap loop, default {}'.\
+        format(default_limit)
+help_pid = 'default ' + default_pid
+pars = OptionParser()
+pars.add_option('', '--limit', help=help_limit, default=default_limit)
+pars.add_option('', '--pid-file', default=default_pid, help=help_pid)
+option, remain = pars.parse_args(sys.argv[1:])
+
+pid_file = os.path.realpath(option.pid_file)
+make_pid(pid_file)
+
+limit = int(option.limit)
+
 REGEX_ISO = 'INFO ([\d]*)\.([\d]*)\.([\d]*)\.([\d]*) (.*) (Encode|Decode) MTI'\
         ' ([\d]*) Data (.*)'
 REGEX_ISO = re.compile(REGEX_ISO)
@@ -64,17 +82,18 @@ DBSession.configure(bind=engine)
 
 q_conf = DBSession.query(Conf).filter_by(nama='last id log to iso')
 conf = q_conf.first()
-
-thread_ids = dict()
-
-q_log = DBSession.query(Log).filter(Log.id > conf.nilai_int).order_by(Log.id)
-for r_log in q_log:
-    match = REGEX_ISO.search(r_log.line)
-    if not match:
-        continue
-    ip1, ip2, ip3, ip4, forwarder, arus, mti, bits = match.groups()
-    ip = '.'.join([ip1, ip2, ip3, ip4])
-    forwarder = get_forwarder_name()
-    is_send = arus == 'Encode' 
-    bits = eval(bits)
-    save()
+offset = 0
+while True:
+    q_log = DBSession.query(Log).filter(Log.id > conf.nilai_int).\
+            order_by(Log.id).offset(offset).limit(limit)
+    for r_log in q_log:
+        match = REGEX_ISO.search(r_log.line)
+        if not match:
+            continue
+        ip1, ip2, ip3, ip4, forwarder, arus, mti, bits = match.groups()
+        ip = '.'.join([ip1, ip2, ip3, ip4])
+        forwarder = get_forwarder_name()
+        is_send = arus == 'Encode'
+        bits = eval(bits)
+        save()
+    offset += limit

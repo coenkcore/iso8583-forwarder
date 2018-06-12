@@ -35,7 +35,7 @@ class Log(LogModel, Base):
     __tablename__ = 'log'
     jenis_id = Column(Integer, ForeignKey('log_jenis.id'), nullable=False)
     line = Column(Text, nullable=False)
-    # line_id berisi md5 dari line 
+    # line_id berisi md5 dari line
     line_id = Column(String(32), nullable=False)
     tgl = Column(DateTime(timezone=True), nullable=False)
     kategori_id = Column(

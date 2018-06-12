@@ -70,10 +70,11 @@ pars.add_option(
 option, remain = pars.parse_args(sys.argv[1:])
 
 pid_file = os.path.realpath(option.pid_file)
-pid = make_pid(pid_file)
+make_pid(pid_file)
 
 KATEGORI = (None, 'INFO', 'ERROR', 'WARNING')
-REGEX_FIRST_LINE = '^([\d]*)-([\d]*)-([\d]*) ([\d]*):([\d]*):([\d]*),([\d]*) '\
+REGEX_FIRST_LINE = '^([\d]*)-([\d]*)-([\d]*) '\
+        '([\d]*):([\d]*):([\d]*),([\d]*) '\
         '(INFO|ERROR|WARNING)'
 REGEX_FIRST_LINE = re.compile(REGEX_FIRST_LINE)
 
@@ -102,6 +103,10 @@ if not option.tail_mode_only:
     f.close()
     if line_id:
         save()
+
+if log_file[-3:] != 'log':
+    print('Selesai.')
+    sys.exit()
 
 lines = []
 line_id = None

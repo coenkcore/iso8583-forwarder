@@ -287,7 +287,7 @@ def stop_daemon(pid_file):
     while i < 5:
         sleep(1)
         i += 1
-        print i
+        print(i)
         if not demon.isLive(pid_file):
             return
     print('kill %d by force' % pid)
