@@ -1,29 +1,37 @@
 MSSQL_PROC_NAME = 'SP_NTB'
+TPL_SQL_TRANSACTION = """DECLARE @out varchar(50);
+EXEC [dbo].[{proc_name}] {params}, @out OUT;
+SELECT @out AS hasil;
+{commit}"""
 
-def mssql_proc(DBSession, params, need_commit=False):
+def list2str(d):
+    r = []
+    for v in d:
+        s = "'" + v + "'"
+        r.append(s)
+    return ','.join(r)
+ 
+def mssql_proc(DBSession, params, need_commit=False, debug=False):
     commit = need_commit and 'COMMIT;' or ''
-    sql = """
-        SET NOCOUNT ON;
-        DECLARE @return_value int;
-        DECLARE @out1 varchar(50);
-        EXEC @return_value=[dbo].[{proc_name}] {params}, @out1 OUT;
-        SELECT @return_value AS other_1, @out1 AS other_2;
-        SET NOCOUNT OFF;
-        {commit}
-        """.format(proc_name=MSSQL_PROC_NAME, params=params, commit=commit)
+    sql = TPL_SQL_TRANSACTION.format(
+            proc_name=MSSQL_PROC_NAME, params=params, commit=commit)
+    if debug:
+        print(sql)
     return DBSession.execute(sql)
 
 
 class Query(object):
-    def __init__(self, DBSession, bank_id):
+    def __init__(self, DBSession, bank_id, debug=False):
         self.DBSession = DBSession
         self.bank_id = bank_id
+        self.debug = debug
 
     def transaction(self, number, method='1', need_commit=False):
-        proc_input = ','.join([method, self.bank_id, number])
+        proc_input = list2str([method, self.bank_id, number])
+        #proc_input = ','.join([method, self.bank_id, number])
         self.log_info('MS-SQL procedure execute %s %s' % (MSSQL_PROC_NAME,
             proc_input))
-        q = mssql_proc(self.DBSession, proc_input, need_commit)
+        q = mssql_proc(self.DBSession, proc_input, need_commit, self.debug)
         inv = q.fetchone()
         self.log_info('MS-SQL procedure result %s' % dict(inv))
         return inv

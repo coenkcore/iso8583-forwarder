@@ -54,7 +54,7 @@ class DbTransaction(Transaction):
             return self.ack_other(msg)
         if 'Tagihan' in inv:
             return inv
-        if 'other_2' in inv and inv.other_2 == '0':
+        if 'hasil' in inv and inv.hasil == '0':
             return self.ack_not_available()
         self.ack_other('hasil query {} belum dipahami'.format(dict(inv)))
 
@@ -115,11 +115,11 @@ class DbTransaction(Transaction):
             return self.ack_other(msg)
         except OperationalError as msg:
             return self.ack_other(msg)
-        if pay.other_2 == '0':
+        if pay.hasil == '0':
             return self.ack_already_paid_2()
-        if pay.other_2 == '2':
+        if pay.hasil == '2':
             return self.ack_other('Gagal membuat NTP')
-        self.set_ntp(pay.other_2)
+        self.set_ntp(pay.hasil)
         self.ack()
 
     # Override
@@ -152,15 +152,15 @@ class DbTransaction(Transaction):
         if self.from_iso.get_ntb() != rev.payment.bit048:
             return self.ack_ntb()
         result = rev.set_unpaid()
-        if result.other_2 == '1':
+        if result.hasil == '1':
             return self.ack()
-        if result.other_2 == '2':
+        if result.hasil == '2':
             return self.ack_payment_owner()
-        if result.other_2 == '0':
+        if result.hasil == '0':
             s = 'Pembatalan gagal atau NTP {} tidak ditemukan'
             s = s.format(rev.payment.bit047)
         else:
-            s = 'Nilai other_2 {} tidak dipahami'.format(result.other_2)
+            s = 'Nilai {} tidak dipahami'.format(result.hasil)
         self.ack_other(s)
 
     def reversal_request_handler(self):
