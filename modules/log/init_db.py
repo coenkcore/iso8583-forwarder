@@ -36,7 +36,7 @@ for bits, jenis_id, view_name in views:
     for bit in bits:
         field = 'bit_' + str(bit).zfill(3)
         bit_fields.append(field)
-    v = BASE_VIEW.format(bits=', '.join(bit_fields), jenis=1)
+    v = BASE_VIEW.format(bits=', '.join(bit_fields), jenis=jenis_id)
     definition_views.append((v, view_name))
 
 

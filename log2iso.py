@@ -8,6 +8,7 @@ from sqlalchemy.exc import IntegrityError
 import pathmagic
 from optparse import OptionParser
 from demon import make_pid
+from tcp import stop_daemon
 from base_models import (
     Base,
     DBSession,
@@ -62,9 +63,16 @@ help_pid = 'default ' + default_pid
 pars = OptionParser()
 pars.add_option('', '--limit', help=help_limit, default=default_limit)
 pars.add_option('', '--pid-file', default=default_pid, help=help_pid)
+pars.add_option('', '--stop', action='store_true')
 option, remain = pars.parse_args(sys.argv[1:])
 
 pid_file = os.path.realpath(option.pid_file)
+
+if option.stop:
+    print('Stop Daemon')
+    stop_daemon(pid_file)
+    sys.exit()
+
 make_pid(pid_file)
 
 limit = int(option.limit)
@@ -86,7 +94,9 @@ offset = 0
 while True:
     q_log = DBSession.query(Log).filter(Log.id > conf.nilai_int).\
             order_by(Log.id).offset(offset).limit(limit)
+    found = False
     for r_log in q_log:
+        found = True
         match = REGEX_ISO.search(r_log.line)
         if not match:
             continue
@@ -96,4 +106,6 @@ while True:
         is_send = arus == 'Encode'
         bits = eval(bits)
         save()
+    if not found:
+        break
     offset += limit

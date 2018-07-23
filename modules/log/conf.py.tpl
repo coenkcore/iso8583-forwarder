@@ -8,3 +8,6 @@ views = [
     (PBB_BITS, 1, 'v_pbb'),
     (PKB_BITS, 6, 'v_pkb'),
     ]
+
+#duplicate_key_message = 'duplicate key'
+duplicate_key_message = 'nilai kunci ganda'
