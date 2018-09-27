@@ -8,3 +8,7 @@ TRANSACTION_BITS.update({
     61: ['Invoice ID', 'Invoice ID', 'LLL', 999, 'ans'],
     62: ['Error', 'Error Message', 'LLL', 999, 'ans'],
     })
+
+INQUIRY_CODE = '301099'
+PAYMENT_CODE = '541099'
+

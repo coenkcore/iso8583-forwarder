@@ -1,6 +1,7 @@
 from sqlalchemy import (
     Column,
     String,
+    Date,
     DateTime,
     BigInteger,
     Integer,
@@ -17,35 +18,44 @@ from base_models import (
     IsoModel,
     HistoryModel,
     )
+from .conf import db_schema
 
 
 # h2h pbb / h2h bphtb / h2h padl / h2h webr
 class Jenis(BaseModel, Base):
     __tablename__ = 'log_jenis'
+    __table_args__ = dict(schema=db_schema)
     nama = Column(String(16), nullable=False, unique=True)
 
 
 # INFO / ERROR / WARNING
 class Kategori(BaseModel, Base):
     __tablename__ = 'log_kategori'
+    __table_args__ = dict(schema=db_schema)
     nama = Column(String(7), nullable=False, unique=True)
 
 
 class Log(LogModel, Base):
     __tablename__ = 'log'
-    jenis_id = Column(Integer, ForeignKey('log_jenis.id'), nullable=False)
+    __table_args__ = dict(schema=db_schema)
+    jenis_id = Column(Integer, ForeignKey(Jenis.id), nullable=False)
     line = Column(Text, nullable=False)
     # line_id berisi md5 dari line
     line_id = Column(String(32), nullable=False)
     tgl = Column(DateTime(timezone=True), nullable=False)
     kategori_id = Column(
-            Integer, ForeignKey('log_kategori.id'), nullable=False)
+            Integer, ForeignKey(Kategori.id), nullable=False)
     __table_args__ = (UniqueConstraint('jenis_id', 'line_id'),)
 
 
 class Iso(IsoModel, Base):
     __tablename__ = 'log_iso'
-    id = Column(Integer, ForeignKey('log.id'), primary_key=True)
+    __table_args__ = dict(schema=db_schema)
+    id = Column(Integer, ForeignKey(Log.id), primary_key=True)
+    tgl = Column(DateTime(timezone=True), nullable=False)
+    jenis_id = Column(Integer, ForeignKey(Jenis.id), nullable=False)
+    kategori_id = Column(
+            Integer, ForeignKey(Kategori.id), nullable=False)
     bit_002 = Column(Text)
     bit_003 = Column(Text)
     bit_004 = Column(Text)
@@ -177,8 +187,34 @@ class Iso(IsoModel, Base):
 
 class Conf(HistoryModel, Base):
     __tablename__ = 'log_conf'
+    __table_args__ = dict(schema=db_schema)
     nama = Column(String(64), nullable=False, unique=True)
     nilai = Column(Text)
     nilai_int = Column(Integer)
     nilai_float = Column(Float)
     nilai_bool = Column(Boolean)
+
+
+class Method(BaseModel, Base):
+    __tablename__ = 'iso_method'
+    __table_args__ = dict(schema=db_schema)
+    nama = Column(String(16), nullable=False, unique=True)
+
+
+class Bank(BaseModel, Base):
+    __tablename__ = 'bank'
+    __table_args__ = dict(schema=db_schema)
+    nama = Column(String(32), nullable=False, unique=True)
+
+
+class Summary(BaseModel, Base):
+    __tablename__ = 'iso_summary'
+    __table_args__ = (
+        UniqueConstraint('jenis_id', 'tgl', 'method_id', 'bank_id'),
+        dict(schema=db_schema))
+    jenis_id = Column(Integer, ForeignKey(Jenis.id), nullable=False)
+    tgl = Column(Date, nullable=False)
+    method_id = Column(Integer, ForeignKey(Method.id), nullable=False)
+    bank_id = Column(Integer, ForeignKey(Bank.id), nullable=False)
+    trx_count = Column(Integer, nullable=False, default=0)
+    trx_amount = Column(Float, nullable=False, default=0)
