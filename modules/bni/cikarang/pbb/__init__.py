@@ -79,11 +79,12 @@ class InquiryResponse(BaseResponse):
         self.set_invoice_profile_to_parent()
 
     def set_invoice_profile_to_parent(self):
-        self.invoice_profile.from_dict({
-            'Nama Wajib Pajak': self.calc.invoice.nm_wp_sppt,
-            'Tagihan Pokok': self.calc.tagihan,
-            'Denda': self.calc.denda,
-            'Total Tagihan': self.calc.total})
+        if self.calc.invoice:
+            self.invoice_profile.from_dict({
+                'Nama Wajib Pajak': self.calc.invoice.nm_wp_sppt,
+                'Tagihan Pokok': self.calc.tagihan,
+                'Denda': self.calc.denda,
+                'Total Tagihan': self.calc.total})
         self.parent.set_invoice_profile(self.invoice_profile.get_raw())
 
     def is_valid(self, is_need_invoice_profile=True):
