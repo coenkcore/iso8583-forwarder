@@ -17,6 +17,9 @@ from .models import (
     Log,
     Iso,
     Conf,
+    Method,
+    Bank,
+    Summary,
     )
 from .conf import (
     db_url,
@@ -56,6 +59,8 @@ def main(argv):
     from_csv.restore(realpath('kategori.csv'), Kategori)
     from_csv.restore(realpath('jenis.csv'), Jenis)
     from_csv.restore(realpath('conf.csv'), Conf)
+    from_csv.restore(realpath('iso_method.csv'), Method)
+    from_csv.restore(realpath('bank.csv'), Bank)
     for v, view_name in definition_views:
         view = Table(view_name, Base.metadata)
         definition = text(v)

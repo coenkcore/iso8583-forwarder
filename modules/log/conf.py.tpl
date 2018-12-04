@@ -1,4 +1,5 @@
 db_url = 'postgresql://user:pass@localhost/dbname'
+db_schema = None
 
 # Daftar modul yang akan dibuatkan view.
 from pbb.structure import TRANSACTION_BITS as PBB_BITS

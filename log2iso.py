@@ -13,6 +13,7 @@ from base_models import (
     Base,
     DBSession,
     )
+from tools import create_now
 from log.models import (
     Conf,
     Log,
@@ -27,6 +28,9 @@ def save():
         bits=bits))
     r_iso = Iso()
     r_iso.id = conf.nilai_int = r_log.id
+    r_iso.tgl = r_log.tgl
+    r_iso.jenis_id = r_log.jenis_id
+    r_iso.kategori_id = r_log.kategori_id
     r_iso.ip = ip
     r_iso.forwarder = forwarder
     r_iso.is_send = is_send
@@ -37,6 +41,7 @@ def save():
         fieldname = 'bit_{n}'.format(n=n)
         setattr(r_iso, fieldname, value)
     DBSession.add(r_iso)
+    conf.updated = create_now()
     DBSession.add(conf)
     try:
         DBSession.flush()
