@@ -28,9 +28,19 @@ BASE_TRANSACTION_BITS.update({
     })
 
 RC_INVALID_NUMBER = '33'
+RC_INSUFFICIENT_FUND = '51'
+RC_ALREADY_PAID = '54'
+RC_NOT_AVAILABLE = '55'
+
+ERR_ALREADY_PAID = 'Invoice ID {invoice_id} sudah dibayar'
+ERR_NOT_AVAILABLE = 'Invoice ID {invoice_id} tidak ada'
 ERR_INVALID_NUMBER = 'Invoice ID {invoice_id} tidak benar'
 ERR_INVALID_BANK = 'Bank ID {id} tidak diperkenankan'
 ERR_SETTLEMENT_DATE = 'Settlement date {raw} tidak benar'
 ERR_TRANSACTION_DATETIME = 'Transaction datetime {raw} tidak benar'
 ERR_TRANSACTION_DATE = 'Transaction date {raw} tidak benar'
 ERR_TRANSACTION_TIME = 'Transaction time {raw} tidak benar'
+ERR_INSUFFICIENT_FUND = 'Invoice ID {invoice_id} pembayaran {bayar} '\
+    'tidak sama dengan tagihan {tagihan}'
+ERR_ISO_PAYMENT = 'Pembayaran melalui H2H untuk invoice ID {invoice_id} '\
+    'tidak ditemukan'

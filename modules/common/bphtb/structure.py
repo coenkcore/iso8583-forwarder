@@ -28,13 +28,12 @@ TRANSACTION_BITS.update({
     33: ['Forwarding', 'Forwarding Institution ID Code', 'LL', 2+11, 'n'], # '00110'
     35: ['Track', 'Track 2 Data', 'LL', 2+37, 'n'],
     37: ['Sequence', 'Sequence Number', 'N', 12, 'n'],
-    #38: ['NTP', 'Nomor Transaksi Pemda', 'LL', 2+20, 'n'],
     39: ['Response', 'Response Code', 'N', 2, 'n'],
     41: ['Terminal', 'Terminal Identification Number', 'N', 8, 'ans'],
     42: ['User', 'Terminal Name / User Identification', 'N', 15, 'ans'],
     43: ['Card', 'Card Acceptor Name / Location', 'ANS', 40, 'ans'],
     47: ['Invoice Profile', 'Nomor Transaksi Pemda', 'LLL', 3+996, 'ans'], # Payment
-    48: ['Invoice Profile 2', 'Nomor Transaksi Bank', 'LLL', 3+163, 'ans'], # Payment
+    48: ['Invoice Profile 2', 'Nomor Transaksi Bank', 'LLL', 3+996, 'ans'], # Payment
     49: ['Currency', 'Transaction Currency Code', 'N', 3, 'n'],
     57: ['NTP', 'Nomor Transaksi Pemda', 'LLL', 3+996, 'ans'],
     58: ['NTB', 'Nomor Transaksi Bank', 'LLL', 3+996, 'ans'],
@@ -101,20 +100,13 @@ NOP = [
     ('Jenis', 1, 'N'),
     ]
 
-RC_OK = '00'
-RC_INSUFFICIENT_FUND = '51'
-RC_ALREADY_PAID = '54'
-RC_NOT_AVAILABLE = '55'
-RC_OTHER_ERROR = '76'
-RC_LINK_DOWN = '91'
-
-ERR_ALREADY_PAID = 'Invoice ID {invoice_id} sudah dibayar'
-ERR_NOT_AVAILABLE = 'Invoice ID {invoice_id} tidak ada'
 ERR_INVALID_LENGTH = 'Invoice ID {invoice_id} lebih dari {max} digit'
-ERR_SETTLEMENT_DATE = 'Settlement date {raw} tidak benar'
-ERR_TRANSMISSION_DATETIME = 'Transmission datetime {raw} tidak benar'
-ERR_TRANSACTION_DATETIME = 'Transaction datetime {raw} tidak benar'
+ERR_INVALID_MAX_LENGTH = 'Invoice ID {invoice_id} lebih dari {max_length} digit'
+ERR_INVALID_PREFIX = 'Prefix Invoice ID {invoice_id} tidak benar, '\
+                'seharusnya {prefix}'
 ERR_INSUFFICIENT_FUND = 'Invoice ID {invoice_id} pembayaran {bayar} '\
     'tidak sama dengan tagihan {tagihan}'
 ERR_PAYMENT_NOT_FOUND = 'Pembayaran invoice ID {invoice_id} tidak ada'
+ERR_ISO_PAYMENT = 'Pembayaran melalui H2H untuk invoice ID {invoice_id} '\
+    'tidak ditemukan'
 ERR_INVOICE_OPEN = 'Status invoice ID {invoice_id} memang belum dibayar'

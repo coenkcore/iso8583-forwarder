@@ -7,11 +7,16 @@ from network import Network
 from .structure import (
     BASE_TRANSACTION_BITS,
     RC_INVALID_NUMBER,
+    RC_NOT_AVAILABLE,
+    RC_ALREADY_PAID,
     ERR_SETTLEMENT_DATE,
     ERR_TRANSACTION_DATETIME,
     ERR_TRANSACTION_DATE,
     ERR_INVALID_BANK,
     ERR_INVALID_NUMBER,
+    ERR_ALREADY_PAID,
+    ERR_NOT_AVAILABLE,
+    ERR_ISO_PAYMENT,
     )
 
 
@@ -63,23 +68,29 @@ class BaseTransaction(Network):
     def set_transaction_code(self, code):
         self.setBit(3, code)
 
+    def get_inquiry_code(self):
+        pass
+
     def is_inquiry_request(self):
         if not self.is_transaction_request():
             return
         code = self.get_transaction_code()
-        return code == INQUIRY_CODE and 'inquiry_request_handler'
+        return code == self.get_inquiry_code() and 'inquiry_request_handler'
 
     def is_inquiry_response(self):
-        return self.get_transaction_code() == INQUIRY_CODE
+        return self.get_transaction_code() == self.get_inquiry_code() 
+
+    def get_payment_code(self):
+        pass
 
     def is_payment_request(self):
         if not self.is_transaction_request():
             return
         code = self.get_transaction_code()
-        return code == PAYMENT_CODE and 'payment_request_handler'
+        return code == self.get_payment_code() and 'payment_request_handler'
 
     def is_payment_response(self):
-        return self.get_transaction_code() == PAYMENT_CODE
+        return self.get_transaction_code() == self.get_payment_code() 
 
     def set_transaction_response(self):
         self.setMTI('0210')
@@ -206,3 +217,22 @@ class BaseTransaction(Network):
     def ack_not_allowed(self):
         msg = ERR_INVALID_BANK.format(id=self.from_iso.get_bank_id())
         self.ack(RC_INVALID_NUMBER, msg)
+
+    def ack_not_available(self):
+        msg = ERR_NOT_AVAILABLE.format(invoice_id=self.from_iso.get_invoice_id())
+        self.ack(RC_NOT_AVAILABLE, msg)
+
+    def ack_already_paid(self):
+        msg = ERR_ALREADY_PAID.format(invoice_id=self.from_iso.get_invoice_id())
+        self.ack(RC_ALREADY_PAID)
+
+    def ack_insufficient_fund(self, nilai_tagihan):
+        msg = ERR_INSUFFICIENT_FUND.format(
+                invoice_id=self.from_iso.get_invoice_id(),
+                bayar=self.from_iso.get_amount(),
+                tagihan=nilai_tagihan)
+        self.ack(RC_INSUFFICIENT_FUND)
+
+    def ack_iso_payment_not_found(self):
+        self.ack(RC_NOT_AVAILABLE, ERR_ISO_PAYMENT.format(
+            invoice_id=self.get_invoice_id()))
