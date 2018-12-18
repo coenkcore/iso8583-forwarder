@@ -39,8 +39,8 @@ TRANSACTION_BITS.update({
     58: ['NTB', 'Nomor Transaksi Bank', 'LLL', 3+996, 'ans'],
     59: ['Additional Data', 'Additional Data', 'LLL', 3+3, 'ans'], # 'PAY'
     60: ['Kode Pemda', 'Kode Pemda', 'LLL', 3+3, 'ans'],
-    61: ['Invoice', 'Invoice ID', 'LLL', 3+20, 'ans'], # NOP 
-    62: ['Nomor Permohonan', 'Nomor Permohonan', 'LLL', 3+20, 'ans'],
+    61: ['NOP', 'Nomor Objek Pajak', 'LLL', 3+20, 'ans'],
+    62: ['Invoice ID', 'Invoice ID', 'LLL', 3+20, 'ans'],
     63: ['Additional', 'Additional Data', 'LLL', 3+3, 'ans'], # '214'
     70: ['Function', 'System Function Code', 'N', 3, 'n'], # Echo test
     102: ['Source', 'Source Account Number', 'LL', 2+20, 'ans'],
@@ -104,6 +104,7 @@ ERR_INVALID_LENGTH = 'Invoice ID {invoice_id} lebih dari {max} digit'
 ERR_INVALID_MAX_LENGTH = 'Invoice ID {invoice_id} lebih dari {max_length} digit'
 ERR_INVALID_PREFIX = 'Prefix Invoice ID {invoice_id} tidak benar, '\
                 'seharusnya {prefix}'
+ERR_INVALID_NOP = 'Invoice ID {invoice_id} NOP-nya {nop} bukan {invalid_nop}'
 ERR_INSUFFICIENT_FUND = 'Invoice ID {invoice_id} pembayaran {bayar} '\
     'tidak sama dengan tagihan {tagihan}'
 ERR_PAYMENT_NOT_FOUND = 'Pembayaran invoice ID {invoice_id} tidak ada'

@@ -80,10 +80,11 @@ class CalculateInvoice(InvoiceQuery):
         return InvoiceQuery.is_paid(self) or self.total < 1
 
     def hitung(self):
-        self.tagihan = round_up(self.invoice.bphtb_hrs_bayar)
+        self.tagihan = self.invoice.bphtb_hrs_bayar
         payment = self.sum_payment()
-        if payment :
+        if payment:
             self.tagihan -= payment
+        self.tagihan = round_up(self.tagihan)
         self.denda = self.invoice.jumlah_denda and \
             round_up(self.invoice.jumlah_denda) or 0
         self.total = self.tagihan + self.denda

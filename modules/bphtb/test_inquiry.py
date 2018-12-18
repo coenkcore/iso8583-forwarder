@@ -6,7 +6,7 @@ from common.bphtb.structure import INQUIRY_CODE
 from config import module_name
 
 
-def inquiry_request(iso, invoice_id, bank_id):
+def inquiry_request(iso, invoice_id, bank_id, nop):
     kini = datetime.now()
     iso.setBit(2, kini.strftime('%Y%m%d%H%M%S')) 
     iso.setBit(3, INQUIRY_CODE)
@@ -27,7 +27,7 @@ def inquiry_request(iso, invoice_id, bank_id):
     iso.setBit(49, '390')
     iso.setBit(59, 'PAY')
     iso.setBit(60, '142')
-    iso.setBit(61, '')
+    iso.setBit(61, nop)
     iso.setBit(62, invoice_id)
     iso.setBit(63, '')
     iso.setBit(102, '')
@@ -55,7 +55,8 @@ class TestInquiry:
         print('Bank kirim inquiry request')
         req_iso = DbTransaction()
         req_iso.set_transaction_request()
-        inquiry_request(req_iso, self.invoice_id, self.bank_id)
+        nop = self.option.nop or ''
+        inquiry_request(req_iso, self.invoice_id, self.bank_id, nop)
         raw = self.get_raw(req_iso)
         print('Pemda terima inquiry request')
         from_iso = DbTransaction()
@@ -83,6 +84,7 @@ def get_option(argv):
     help_bank = 'default {b}. Contoh lain: mitracomm,14 dimana 14 adalah BCA'
     help_bank = help_bank.format(b=bank)
     pars.add_option('-i', '--invoice-id')
+    pars.add_option('', '--nop')
     pars.add_option('-b', '--bank', default=bank, help=help_bank)
     option, remain = pars.parse_args(argv)
     if not option.invoice_id:

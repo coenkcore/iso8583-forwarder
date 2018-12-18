@@ -12,6 +12,7 @@ from .query import (
 class DbTransaction(Transaction):
     def set_invoice_profile(self):  # Override
         inv = self.calc.invoice
+        self.set_nop(inv.nop)
         self.invoice_profile.from_dict({
             'Luas Tanah': inv.luas_tanah,
             'Luas Bangunan': inv.luas_bangunan,
@@ -42,8 +43,12 @@ class DbTransaction(Transaction):
         self.calc = CalculateInvoice(invoice_id)
         if not self.calc.invoice:
             return self.ack_not_available()
+        inv = self.calc.invoice
         self.set_amount(self.calc.total)
         self.set_invoice_profile()
+        nop = self.from_iso.get_nop()
+        if nop and nop != inv.nop:
+            return self.ack_invalid_nop(inv.nop)
         if self.calc.is_paid():
             return self.ack_already_paid()
         return True
