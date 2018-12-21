@@ -2,12 +2,11 @@ from datetime import datetime
 from pprint import pprint
 from time import sleep
 from optparse import OptionParser
-from structure import INQUIRY_CODE
-from transaction import Transaction
-import conf
+from .conf import module_name
 
 
 def inquiry_request(iso, invoice_id, bank_id):
+    from .structure import INQUIRY_CODE
     kini = datetime.now()
     iso.setBit(2, kini.strftime('%Y%m%d%H%M%S'))
     iso.set_transaction_code(INQUIRY_CODE)
@@ -29,13 +28,24 @@ def inquiry_request(iso, invoice_id, bank_id):
     iso.setBit(61, invoice_id)
 
 
-name = '.'.join(['padl', conf.module_name])
-module = __import__(name)
-area_module = getattr(module, conf.module_name)
+test_not_found = False
+name = '.'.join(['padl', module_name, 'test'])
+try:
+    module = __import__(name)
+except ImportError as test_not_found:
+    name = '.'.join(['padl', module_name])
+    module = __import__(name)
+area_module = getattr(module, module_name)
 DbTransaction = area_module.DbTransaction
 
+if test_not_found:
+    from .transaction import Transaction
+else:
+    inquiry_request = area_module.test.inquiry_request
+    Transaction = area_module.test.Transaction
 
-class TestInquiry(object):
+
+class TestInquiry:
     def __init__(self, argv):
         self.option = get_option(argv)
         if not self.option:
@@ -44,9 +54,6 @@ class TestInquiry(object):
         streamer_name, bank_id = split_bank(self.option.bank)
         self.conf = dict(name=streamer_name, ip='127.0.0.1', bank_id=bank_id)
 
-    def get_iso_cls(self):
-        return DbTransaction
-
     def run(self):
         if not self.option:
             return
@@ -54,15 +61,16 @@ class TestInquiry(object):
         req_iso = Transaction()
         req_iso.set_transaction_request()
         inquiry_request(req_iso, self.invoice_id, self.conf['bank_id'])
+        pprint(req_iso.invoice_profile)
         raw = self.get_raw(req_iso)
         print('Pemda terima inquiry request')
         from_iso = Transaction()
         from_iso.setIsoContent(raw)
         print('Pemda kirim inquiry response')
-        cls = self.get_iso_cls()
-        resp_iso = cls(from_iso=from_iso, conf=self.conf)
+        resp_iso = DbTransaction(from_iso=from_iso, conf=self.conf)
         func = getattr(resp_iso, from_iso.get_func_name())
         func()
+        pprint(resp_iso.invoice_profile)
         self.get_raw(resp_iso)
         return resp_iso  # Untuk test_payment.py
 

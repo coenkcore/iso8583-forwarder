@@ -310,7 +310,11 @@ class FixLength(object):
     def __repr__(self):
         lines = []
         for name, size, typ in self.struct:
-            value = str(self.fields[name]['value'])
+            value = self.fields[name]['value']
+            if value is None:
+                value = ''
+            else:
+                value = str(value)
             s = '{} ({:d}): {} ({:d})'.format(name, size, value, len(value))
             lines.append(s)
         return '\n'.join(lines)

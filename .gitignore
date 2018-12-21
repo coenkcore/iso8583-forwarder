@@ -62,3 +62,6 @@ target/
 .ipynb_checkpoints
 config.py
 forwarder.py
+*.pid
+conf/*.py
+conf.py

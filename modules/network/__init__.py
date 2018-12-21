@@ -188,7 +188,7 @@ class Network(Data):
             else:
                 self.log_info(log_message)
 
-    def ack_other(self, msg):
+    def ack_other(self, msg='Ada masalah yang belum dipahami'):
         self.ack(RC_OTHER_ERROR, msg)
 
     def ack_function_not_found(self):
