@@ -28,16 +28,6 @@ from .conf import (
     pesan2,
 )
 
-# engine = create_engine(db_url, pool_size=db_pool_size,
-                       # max_overflow=db_max_overflow)
-# Base = declarative_base()
-# Base.metadata.bind = engine
-# session_factory = sessionmaker()
-# DBSession = scoped_session(session_factory)
-# DBSession.configure(bind=engine)
-# models = Models(Base, db_schema)
-# query = Query(models, DBSession)
-
 DEBUG = '--debug' in sys.argv
 
 
@@ -58,11 +48,6 @@ class BaseResponse(object):
         conf = host[self.parent.conf['name']]
         return iso_pay.bank_id == conf['id']
 
-    # def commit(self):
-    #     DBSession.commit()
-    #    self.parent.ack()
-    #
-
 
 class InquiryResponse(BaseResponse):
     def __init__(self, parent, method='inquiry'):
@@ -73,7 +58,6 @@ class InquiryResponse(BaseResponse):
         self.conf = host[self.parent.conf['name']]
         data = self.get_data()
         self.invoice = send_rpc(rpc_user, rpc_key, rpc_url, method, data)
-        # print self.invoice
 
     def get_data(self):
         return dict(kd_bank=str(self.conf['id']).rjust(3,'0'),
@@ -167,8 +151,7 @@ def inquiry(parent):
 # Payment #
 ###########
 class PaymentResponse(InquiryResponse):
-    def __init__(self, parent):
-        method = 'payment'
+    def __init__(self, parent, method='payment'):
         InquiryResponse.__init__(self, parent, method)
 
     def get_data(self):
@@ -188,46 +171,9 @@ class PaymentResponse(InquiryResponse):
         self.init_invoice_profile()
         if not self.is_valid():
             return
-        self.create_payment()
-        self.parent.ack()
-        # self.commit()
-
-    # Override
-    # def is_valid(self):
-    #     if not InquiryResponse.is_valid(self):
-    #         return
-    #     if self.calc.total != self.parent.from_iso.get_amount():
-    #         return self.parent.ack_insufficient_fund(self.calc.total)
-    #     return True
-
-    def create_payment(self):
-        # inv = self.calc.invoice
-        # tgl_bayar = self.parent.from_iso.get_transaction_datetime()
-        # ntp = create_ntp(tgl_bayar.date())
-        # no_urut = get_no_urut(inv.tahun, inv.departemen_id)
-        # pembayaran_ke = get_pembayaran_ke(inv.id)
-        # pay = models.Payment()
-        # pay.kode = ntp
-        # pay.status = 1
-        # pay.created = pay.updated = pay.create_date = pay.update_date = \
-        #     datetime.now()
-        # pay.bunga = self.calc.denda
-        # pay.tahun = inv.tahun
-        # pay.departemen_id = inv.departemen_id
-        # pay.no_urut = no_urut
-        # pay.ar_invoice_id = inv.id
-        # pay.pembayaran_ke = pembayaran_ke
-        # pay.bayar = self.calc.total
-        # pay.tgl_bayar = tgl_bayar
-        # pay.jatuh_tempo = inv.jatuh_tempo
-        # pay.ntb = self.parent.from_iso.get_ntb()
-        # pay.ntp = ntp
-        # pay.bank_id = self.parent.conf['id']
-        # pay.channel_id = self.parent.from_iso.get_channel()
-        # DBSession.add(pay)
-        # self.calc.set_paid()
-        # DBSession.flush()
+            
         self.parent.set_ntp(self.data['ntp'])
+        self.parent.ack()
 
 
 def payment(parent):
@@ -238,22 +184,30 @@ def payment(parent):
 ############
 # Reversal #
 ############
-class ReversalResponse(BaseResponse):
+class ReversalResponse(PaymentResponse):
     def __init__(self, parent):
-        BaseResponse.__init__(self, parent)
-        self.rev = Reversal(models, DBSession, self.invoice_id_raw)
+        method = 'reversal'
+        PaymentResponse.__init__(self, parent, method)
 
     def response(self):
-        if not self.rev.invoice:
+        self.init_invoice_profile()
+        if not self.invoice:
             return self.parent.ack_payment_not_found()
-        if not self.rev.is_paid():
-            return self.parent.ack_invoice_open()
-        if not self.rev.payment:
-            return self.parent.ack_payment_not_found()
-        if not self.is_transaction_owner(self.rev.payment):
-            return self.parent.ack_payment_owner()
-        self.rev.set_unpaid()
-        self.commit()
+        if 'error' in self.invoice:
+            error = int(self.invoice['error']['code'])
+            if error == -52001:
+                return self.parent.ack_not_available()
+            elif error == -52002:
+                return self.ack_already_paid()
+            elif error == -54001:
+                return self.parent.ack_payment_not_found()
+            elif error == -54002:
+                return self.parent.ack_payment_owner()
+            elif error == -54003:
+                return self.parent.ack_invoice_open()
+            else:
+                return self.parent.ack_other(self.invoice['error']['message'])
+        return self.parent.ack()
 
 
 def reversal(parent):
