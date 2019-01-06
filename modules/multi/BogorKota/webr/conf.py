@@ -17,3 +17,7 @@ host = {
         'id': 110,
         },
     }
+
+rpc_url = 'https://va.dapda.id/rpc/va'
+rpc_key = 'admin'
+rpc_user = 'admin'

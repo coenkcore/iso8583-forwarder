@@ -5,7 +5,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import (
     scoped_session,
     sessionmaker,
-    )
+)
 from tools import FixLength
 from multi.webr.structure import INVOICE_PROFILE
 from .models import Models
@@ -14,7 +14,7 @@ from .query import (
     CalculateInvoice,
     NTP,
     Reversal,
-    )
+)
 from .conf import (
     db_url,
     db_schema,
@@ -24,8 +24,7 @@ from .conf import (
     persen_denda,
     pesan1,
     pesan2,
-    )
-
+)
 
 engine = create_engine(db_url, pool_size=db_pool_size,
                        max_overflow=db_max_overflow)
@@ -36,7 +35,6 @@ DBSession = scoped_session(session_factory)
 DBSession.configure(bind=engine)
 models = Models(Base, db_schema)
 query = Query(models, DBSession)
-
 
 DEBUG = '--debug' in sys.argv
 
@@ -60,14 +58,13 @@ class BaseResponse(object):
         self.parent.ack()
 
 
-
 class InquiryResponse(BaseResponse):
     def __init__(self, parent):
         BaseResponse.__init__(self, parent)
         self.parent = parent
         self.calc = CalculateInvoice(
-                models, DBSession, parent.from_iso.get_invoice_id(),
-                persen_denda)
+            models, DBSession, parent.from_iso.get_invoice_id(),
+            persen_denda)
         module_conf = host[self.parent.conf['name']]
         self.parent.conf.update(module_conf)
 
@@ -89,7 +86,7 @@ class InquiryResponse(BaseResponse):
             'Kode SKPD': invoice.departemen_kode,
             'Nama SKPD': invoice.departemen_nama,
             'Additional 1': pesan1,
-            'Additional 2': pesan2,})
+            'Additional 2': pesan2, })
         self.set_invoice_profile_to_parent()
         print_debug('Invoice Profile', self.invoice_profile.to_dict())
 
@@ -140,14 +137,16 @@ def create_ntp(tgl):
     ntp = NTP(models, DBSession)
     return ntp.create(tgl)
 
+
 def get_no_urut(tahun, departemen_id):
     q = DBSession.query(models.Payment).filter_by(
-            tahun=tahun, departemen_id=departemen_id)
+        tahun=tahun, departemen_id=departemen_id)
     q = q.order_by(models.Payment.no_urut.desc())
     row = q.first()
     if row:
         return row.no_urut + 1
     return 1
+
 
 def get_pembayaran_ke(invoice_id):
     q = DBSession.query(models.Payment).filter_by(ar_invoice_id=invoice_id)
@@ -181,19 +180,19 @@ class PaymentResponse(InquiryResponse):
         no_urut = get_no_urut(inv.tahun, inv.departemen_id)
         pembayaran_ke = get_pembayaran_ke(inv.id)
         pay = models.Payment()
-        pay.kode = ntp 
+        pay.kode = ntp
         pay.status = 1
         pay.created = pay.updated = pay.create_date = pay.update_date = \
-                datetime.now() 
+            datetime.now()
         pay.bunga = self.calc.denda
         pay.tahun = inv.tahun
         pay.departemen_id = inv.departemen_id
         pay.no_urut = no_urut
         pay.ar_invoice_id = inv.id
-        pay.pembayaran_ke = pembayaran_ke 
+        pay.pembayaran_ke = pembayaran_ke
         pay.bayar = self.calc.total
-        pay.tgl_bayar = tgl_bayar 
-        pay.jatuh_tempo = inv.jatuh_tempo 
+        pay.tgl_bayar = tgl_bayar
+        pay.jatuh_tempo = inv.jatuh_tempo
         pay.ntb = self.parent.from_iso.get_ntb()
         pay.ntp = ntp
         pay.bank_id = self.parent.conf['id']

@@ -1,7 +1,4 @@
 import sys
-import os
-
-
 sys.path.insert(0, 'modules')
 module_name = sys.argv[1]
 name = module_name + '.test_inquiry'
